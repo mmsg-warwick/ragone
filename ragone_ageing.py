@@ -3,8 +3,19 @@ import numpy as np
 # from util import compute_ragone, plot_ragone
 from ragone import RagoneSimulation, RagonePlot, get_options
 from os import path
+import argparse
 
-options, tag = get_options(SEI=True, plating=True, lam=True)
+parser = argparse.ArgumentParser(description="Run battery ageing simulation.")
+parser.add_argument("--SEI", action="store_true", help="Enable SEI (default: disabled)")
+parser.add_argument("--plating", action="store_true", help="Enable plating (default: disabled)")
+parser.add_argument("--lam", action="store_true", help="Enable LAM (default: disabled)")
+parser.add_argument("--step", type=int, default=100, help="Step size for ageing (default: 100)")
+parser.set_defaults(SEI=False, plating=False, lam=False)
+args = parser.parse_args()
+
+step = args.step
+
+options, tag = get_options(SEI=args.SEI, plating=args.plating, lam=args.lam)
 
 model = pybamm.lithium_ion.DFN(
     options=options,
@@ -41,20 +52,19 @@ aged_sol = pybamm.load(path.join("data", f"aged_solution{tag}.pkl"))
 # }
 
 var_pts = {
-    "x_n": 40,
-    "x_s": 40,
-    "x_p": 40,
-    "r_n": 40,
-    "r_p": 40,
+    "x_n": 30,
+    "x_s": 30,
+    "x_p": 30,
+    "r_n": 30,
+    "r_p": 30,
 }
 
 # solutions = [sol.all_first_states[0], sol.all_first_states[-1]]
-step = 200
 ageing_solutions = [aged_sol.all_first_states[0]] + aged_sol.all_first_states[step-1::step]
 
 modes = [
     "power",
-    # "current",
+    "current",
 ]
 value_ranges = [
     np.logspace(np.log10(0.5), np.log10(100), 50),
