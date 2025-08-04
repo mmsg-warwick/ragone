@@ -8,11 +8,14 @@ parser.add_argument("--SEI", action="store_true", help="Enable SEI (default: dis
 parser.add_argument("--plating", action="store_true", help="Enable plating (default: disabled)")
 parser.add_argument("--lam", action="store_true", help="Enable LAM (default: disabled)")
 parser.add_argument("--N_cycles", type=int, default=1000, help="Number of cycles (default: 1000)")
-parser.set_defaults(SEI=False, plating=False, lam=False)
+parser.add_argument("--fast", action="store_true", help="Fast charging (default: disabled)")
+parser.set_defaults(SEI=False, plating=False, lam=False, fast=False)
 args = parser.parse_args()
 
 options, tag = get_options(SEI=args.SEI, plating=args.plating, lam=args.lam)
 N_cycles = args.N_cycles
+if args.fast:
+    tag = "_fast" + tag
 
 pybamm.set_logging_level("NOTICE")
 
@@ -69,12 +72,17 @@ solver = pybamm.IDAKLUSolver(
 
 # N_cycles = 1000
 
+if args.fast:
+    charge_step = "Charge at 1C until 4.2 V"
+else:
+    charge_step = "Charge at C/3 until 4.2 V"
+
 experiment = pybamm.Experiment(
     [
         (
             "Discharge at 1C until 2.5 V",
             "Rest for 1 hour",
-            "Charge at C/3 until 4.2 V",
+            charge_step,
             "Hold at 4.2 V until 50 mA",
             "Rest for 1 hour",
         ),
@@ -98,3 +106,4 @@ sol = sim.solve(save_at_cycles=save_at_cycles)
 # print(sol["Negative electrode porosity"].entries)
 
 sol.save(path.join("data", f"aged_solution{tag}.pkl"))
+# sol.save(path.join("data", f"aged_solution_fast{tag}.pkl"))
