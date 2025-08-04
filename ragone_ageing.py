@@ -10,12 +10,14 @@ parser.add_argument("--SEI", action="store_true", help="Enable SEI (default: dis
 parser.add_argument("--plating", action="store_true", help="Enable plating (default: disabled)")
 parser.add_argument("--lam", action="store_true", help="Enable LAM (default: disabled)")
 parser.add_argument("--step", type=int, default=100, help="Step size for ageing (default: 100)")
-parser.set_defaults(SEI=False, plating=False, lam=False)
+parser.add_argument("--fast", action="store_true", help="Fast charging (default: disabled)")
+parser.set_defaults(SEI=False, plating=False, lam=False, fast=False)
 args = parser.parse_args()
 
-step = args.step
-
 options, tag = get_options(SEI=args.SEI, plating=args.plating, lam=args.lam)
+step = args.step
+if args.fast:
+    tag = "_fast" + tag
 
 model = pybamm.lithium_ion.DFN(
     options=options,
@@ -68,7 +70,7 @@ modes = [
 ]
 value_ranges = [
     np.logspace(np.log10(0.5), np.log10(100), 50),
-    # np.logspace(np.log10(0.1), np.log10(30), 50),
+    np.logspace(np.log10(0.1), np.log10(30), 50),
 ]
 
 labels = [f"Cycle {step * i}" for i in range(len(ageing_solutions))]
