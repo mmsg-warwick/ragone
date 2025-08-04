@@ -68,7 +68,7 @@ modes = [
 ]
 value_ranges = [
     np.logspace(np.log10(0.5), np.log10(100), 50),
-    # np.logspace(np.log10(0.1), np.log10(30), 50),
+    np.logspace(np.log10(0.1), np.log10(30), 50),
 ]
 
 labels = [f"Cycle {step * i}" for i in range(len(ageing_solutions))]
