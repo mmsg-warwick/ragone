@@ -1,14 +1,20 @@
 import pybamm
-from ragone import get_options
+from ragone import get_options, get_parameter_values
 from os import path
 import argparse
 
 parser = argparse.ArgumentParser(description="Run battery ageing simulation.")
 parser.add_argument("--SEI", action="store_true", help="Enable SEI (default: disabled)")
-parser.add_argument("--plating", action="store_true", help="Enable plating (default: disabled)")
+parser.add_argument(
+    "--plating", action="store_true", help="Enable plating (default: disabled)"
+)
 parser.add_argument("--lam", action="store_true", help="Enable LAM (default: disabled)")
-parser.add_argument("--N_cycles", type=int, default=1000, help="Number of cycles (default: 1000)")
-parser.add_argument("--fast", action="store_true", help="Fast charging (default: disabled)")
+parser.add_argument(
+    "--N_cycles", type=int, default=1000, help="Number of cycles (default: 1000)"
+)
+parser.add_argument(
+    "--fast", action="store_true", help="Fast charging (default: disabled)"
+)
 parser.set_defaults(SEI=False, plating=False, lam=False, fast=False)
 args = parser.parse_args()
 
@@ -25,21 +31,7 @@ model = pybamm.lithium_ion.DFN(
     options=options,
 )
 
-parameter_values = pybamm.ParameterValues("OKane2022")
-Chen2020 = pybamm.ParameterValues("Chen2020")
-parameter_values["Negative electrode OCP [V]"] = Chen2020["Negative electrode OCP [V]"]
-# parameter_values["SEI solvent diffusivity [m2.s-1]"] *= 10
-# parameter_values["EC diffusivity [m2.s-1]"] = 2e-18
-# parameter_values["SEI kinetic rate constant [m.s-1]"] = 2e-13
-parameter_values["SEI reaction exchange current density [A.m-2]"] = 1.5e-7 *  0.15 * 2
-# parameter_values["SEI open-circuit potential [V]"] = 0
-parameter_values["Lithium plating kinetic rate constant [m.s-1]"] = 5e-12 * 2
-parameter_values["Negative electrode LAM constant proportional term [s-1]"] = 2.7778e-07 * 2
-parameter_values["Positive electrode LAM constant proportional term [s-1]"] = 2.7778e-07 * 2
-# parameter_values["Negative electrode LAM constant proportional term [s-1]"] = 1.82e-6
-# parameter_values["Positive electrode LAM constant proportional term [s-1]"] = 2.132e-6
-parameter_values["Negative electrode LAM constant exponential term"] = 1.3
-parameter_values["Positive electrode LAM constant exponential term"] = 1.3
+parameter_values = get_parameter_values(ageing=True)
 
 output_variables = [
     "Voltage [V]",
@@ -54,8 +46,8 @@ var_pts = {
     "x_n": 30,
     "x_s": 30,
     "x_p": 30,
-    "r_n": 30,
-    "r_p": 30,
+    "r_n": 20,
+    "r_p": 20,
 }
 
 solver = pybamm.IDAKLUSolver(
@@ -86,7 +78,8 @@ experiment = pybamm.Experiment(
             "Hold at 4.2 V until 50 mA",
             "Rest for 1 hour",
         ),
-    ] * N_cycles,
+    ]
+    * N_cycles,
     termination="50% capacity",
 )
 
