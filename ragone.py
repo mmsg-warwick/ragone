@@ -24,6 +24,36 @@ def get_options(SEI=False, plating=False, lam=False):
     return options, tag
 
 
+def get_parameter_values(ageing=True):
+    parameter_values = pybamm.ParameterValues("OKane2022")
+    Chen2020 = pybamm.ParameterValues("Chen2020")
+    parameter_values["Negative electrode OCP [V]"] = Chen2020[
+        "Negative electrode OCP [V]"
+    ]
+    if ageing:
+        parameter_values["SEI reaction exchange current density [A.m-2]"] = (
+            1.5e-7 * 0.15 * 1
+        )  # was *2
+        parameter_values["Lithium plating kinetic rate constant [m.s-1]"] = 5e-12 * 2
+        parameter_values["Negative electrode LAM constant proportional term [s-1]"] = (
+            2.7778e-07 * 2
+        )
+        parameter_values["Positive electrode LAM constant proportional term [s-1]"] = (
+            2.7778e-07 * 2
+        )
+        parameter_values["Negative electrode LAM constant exponential term"] = 1.3
+        parameter_values["Positive electrode LAM constant exponential term"] = 1.3
+    else:
+        parameter_values["SEI kinetic rate constant [m.s-1]"] = 0
+        parameter_values["SEI reaction exchange current density [A.m-2]"] = 0
+        parameter_values["SEI solvent diffusivity [m2.s-1]"] = 0
+        parameter_values["Lithium plating kinetic rate constant [m.s-1]"] = 0
+        parameter_values["Negative electrode LAM constant proportional term [s-1]"] = 0
+        parameter_values["Positive electrode LAM constant proportional term [s-1]"] = 0
+
+    return parameter_values
+
+
 class RagoneSolution:
     def __init__(self, data, mode):
         self.data = data
@@ -50,16 +80,17 @@ class RagoneSolution:
 
     def _gaussian_log(self, x, E0, P0, n):
         return (E0 - (10**x / P0) ** n) / np.log(10)
-    
-    def _gaussian(self, x, E0, P0, n):
-        return E0 * np.exp(- (x / P0) ** n)
 
+    def _gaussian(self, x, E0, P0, n):
+        return E0 * np.exp(-((x / P0) ** n))
 
     def fit_log(self):
         log_input = np.log10(self.data[self.input])
         log_output = np.log10(self.data[self.output])
 
-        popt, _ = curve_fit(self._gaussian_log, log_input, log_output, bounds=(0, np.inf))
+        popt, _ = curve_fit(
+            self._gaussian_log, log_input, log_output, bounds=(0, np.inf)
+        )
 
         self._raw_metrics = popt
         self.metrics = {
@@ -68,11 +99,16 @@ class RagoneSolution:
             "n": popt[2],
         }
         return popt
-    
+
     def fit_gaussian(self):
-        popt, _ = curve_fit(self._gaussian, self.data[self.input], self.data[self.output], bounds=(0, np.inf))
+        popt, _ = curve_fit(
+            self._gaussian,
+            self.data[self.input],
+            self.data[self.output],
+            bounds=(0, np.inf),
+        )
         return popt
-    
+
     def plot_log(self):
         print(self.metrics)
         self.plot_fit()
@@ -96,13 +132,16 @@ class RagoneSolution:
         ax.set_ylabel(self.output)
         ax.axhline(popt[0], color="lightgray", linestyle="--", label="E0")
         ax.axvline(popt[1], color="lightgray", linestyle="--", label="P0")
-        ax.annotate(f"E0 = {popt[0]:.2f},\n P0 = {popt[1]:.2f},\n n = {popt[2]:.2f}", xy=(0.05, 0.05), xycoords='axes fraction')
+        ax.annotate(
+            f"E0 = {popt[0]:.2f},\n P0 = {popt[1]:.2f},\n n = {popt[2]:.2f}",
+            xy=(0.05, 0.05),
+            xycoords="axes fraction",
+        )
 
         if show_plot:
             plt.show()
-        
+
         return fig, ax
-        
 
     def plot_fit(self, show_plot=True):
         if self._raw_metrics is None:
@@ -119,11 +158,17 @@ class RagoneSolution:
                 self._raw_metrics[2],
             ),
         )
-        ax.annotate(f"E0 = {np.exp(self._raw_metrics[0]):.2f},\n P0 = {self._raw_metrics[1]:.2f},\n n = {self._raw_metrics[2]:.2f}", xy=(0.05, 0.05), xycoords='axes fraction')
+        ax.annotate(
+            f"E0 = {np.exp(self._raw_metrics[0]):.2f},\n P0 = {self._raw_metrics[1]:.2f},\n n = {self._raw_metrics[2]:.2f}",
+            xy=(0.05, 0.05),
+            xycoords="axes fraction",
+        )
 
         ax.set_xlabel(self.input)
         ax.set_ylabel(self.output)
-        ax.axhline(np.exp(self._raw_metrics[0]), color="lightgray", linestyle="--", label="E0")
+        ax.axhline(
+            np.exp(self._raw_metrics[0]), color="lightgray", linestyle="--", label="E0"
+        )
         ax.axvline(self._raw_metrics[1], color="lightgray", linestyle="--", label="P0")
 
         if show_plot:
@@ -146,6 +191,7 @@ class RagoneSolution:
     # @metrics.setter
     # def metrics(self, value):
     #     self._metrics = value
+
 
 class RagonePlot:
     def __init__(

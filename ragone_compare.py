@@ -27,26 +27,27 @@ var_pts = {
     "r_n": 20,
     "r_p": 20,
 }
-experiment_setup = pybamm.Experiment([
-    "Discharge at C/10 until 2.5V",
-    "Hold at 2.5V until C/50",
-])
+experiment_setup = pybamm.Experiment(
+    [
+        "Discharge at C/10 until 2.5V",
+        "Hold at 2.5V until C/50",
+    ]
+)
 
 aged_sol = pybamm.load("solution.pkl")
-model.set_initial_conditions_from(
-    aged_sol.all_first_states[-1],
-    inplace=True
-)
+model.set_initial_conditions_from(aged_sol.all_first_states[-1], inplace=True)
 
 sim_setup = pybamm.Simulation(
     model,
     parameter_values=parameter_values,
     experiment=experiment_setup,
     solver=solver,
-    )
+)
 sol_setup = sim_setup.solve()
 
-model_discharged = model.set_initial_conditions_from(sol_setup.last_state, inplace=False)
+model_discharged = model.set_initial_conditions_from(
+    sol_setup.last_state, inplace=False
+)
 
 # modes = ["current"]
 modes = ["power", "current"]
@@ -72,7 +73,9 @@ i = 0
 for value_range, mode in zip(value_ranges, modes):
     for model, direction in zip(models, directions):
         i += 1
-        print(f"Running Ragone plot for solution {i} of {len(value_ranges) * len(models)}")
+        print(
+            f"Running Ragone plot for solution {i} of {len(value_ranges) * len(models)}"
+        )
         output, input = compute_ragone(
             model,
             parameter_values,

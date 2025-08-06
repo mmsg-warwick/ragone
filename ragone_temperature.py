@@ -15,7 +15,7 @@ var_pts = {
     "r_p": 20,
 }
 
-T_range= [-5, 5, 15, 25, 35, 45, 55]
+T_range = [-5, 5, 15, 25, 35, 45, 55]
 T_range = [25]
 
 labels = [f"{T}°C" for T in T_range]

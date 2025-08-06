@@ -4,10 +4,11 @@ import gc
 from util import compute_ragone, plot_ragone
 from ragone import RagoneSimulation, RagonePlot
 
-options, tag = get_options(SEI=True, plating=True, lam=True)
-
 model = pybamm.lithium_ion.DFN(
-    options=options,
+    options={
+        "SEI": "none",
+        # "surface form": "differential",
+    }
 )
 
 
