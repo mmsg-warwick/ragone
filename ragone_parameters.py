@@ -25,35 +25,41 @@ var_pts = {
 
 step = 100
 
-ageing_solutions = [aged_sol.all_first_states[0]] + aged_sol.all_first_states[
-    step - 1 :: step
-]
+cycles = [0] + [i * step - 1 for i in range(1, len(aged_sol.all_first_states) // step + 1)]
 
+labels = [f"Cycle {i + 1}" for i in cycles]
+labels[1:-1] = [None] * (len(labels) - 2)
 
+filename_extension = {
+    "Negative electrode porosity": "eps_n",
+    "Negative electrode active material volume fraction": "amvf_n",
+    "Positive electrode porosity": "eps_p",
+    "Positive electrode active material volume fraction": "amvf_p",
+}
 
-solver = pybamm.IDAKLUSolver(
-    output_variables=["Voltage [V]"],
-    rtol=1e-6,
-    atol=1e-9,
-    root_tol=1e-9,
-    # root_method="lm",
-    # options={
-    #     "max_error_test_failures": 200,
-    #     "max_convergence_failures": 10000,
-    #     "max_nonlinear_iterations": 400,
-    #     "dt_min": 1e-9,
-    # },
-)
+parameter_sweeps = {}
+
+print("Extracting parameter values from aged solution...")
+for label in filename_extension.keys():
+    values = []
+    for i in cycles:
+        values.append(aged_sol.all_first_states[i][f"X-averaged {label.lower()}"].entries[0])
+    parameter_sweeps[label] = values
+
+solver = pybamm.IDAKLUSolver(rtol=1e-8, atol=1e-10)
+
+value_ranges = {
+    "power": np.logspace(np.log10(0.5), np.log10(100), 50),
+    "current": np.logspace(np.log10(0.1), np.log10(30), 50),
+}
 
 for mode, value_range in value_ranges.items():
+    print(f"Starting Ragone plots - {mode} mode")
     for parameter_name, parameter_range in parameter_sweeps.items():
         solutions = []
-        edited_parameter_values = parameter_values.copy()
-        if parameter_range[0] > 0.01:
-            labels = [f"{parameter_value:.3f}" for parameter_value in parameter_range]
-        else:
-            labels = [f"{parameter_value:.3e}" for parameter_value in parameter_range]
+        edited_parameter_values = get_parameter_values(ageing=False)
 
+        print(f"Running Ragone plot for parameter: {parameter_name}")
         for i, parameter_value in enumerate(parameter_range):
             print(f"Running Ragone plot for solution {i+1} of {len(parameter_range)}")
             edited_parameter_values[parameter_name] = parameter_value
@@ -69,8 +75,6 @@ for mode, value_range in value_ranges.items():
             sol = sim.solve()
 
             solutions.append(sol)
-
-            # gc.collect()
 
         plt = RagonePlot(solutions, labels=labels, volume=volume)
         fig, _ = plt.plot(show_plot=False)
