@@ -47,19 +47,15 @@ ageing_solutions = [aged_sol.all_first_states[0]] + aged_sol.all_first_states[
     step - 1 :: step
 ]
 
-modes = [
-    "power",
-    "current",
-]
-value_ranges = [
-    np.logspace(np.log10(0.5), np.log10(100), 50),
-    np.logspace(np.log10(0.1), np.log10(30), 50),
-]
+value_ranges = {
+    "power": np.logspace(np.log10(0.5), np.log10(100), 50),
+    "current": np.logspace(np.log10(0.1), np.log10(30), 50),
+}
 
 labels = [f"Cycle {step * i}" for i in range(len(ageing_solutions))]
 labels[1:-1] = [None] * (len(labels) - 2)
 
-for mode, value_range in zip(modes, value_ranges):
+for mode, value_range in value_ranges.items():
     solutions = []
     for i, first_state in enumerate(ageing_solutions):
         print(f"Running Ragone plot for solution {i+1} of {len(ageing_solutions)}")
