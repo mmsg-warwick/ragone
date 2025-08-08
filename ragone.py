@@ -229,15 +229,39 @@ class RagonePlot:
         self.min_output = min([sol.min_output for sol in self.solutions])
         self.max_output = max([sol.max_output for sol in self.solutions])
 
+    def _get_ticks_range(self, tick_min, tick_max):
+        decades = np.floor(np.log10(tick_min)), np.ceil(np.log10(tick_max))
+        ticks = []
+        for exp in range(int(decades[0]), int(decades[1]) + 1):
+            for factor in [1, 2, 5]:
+                tick = factor * 10**exp
+                if tick_min <= tick <= tick_max:
+                    ticks.append(tick)
+        return ticks
+
+    def _format_tick_labels(self, xs):
+        labels = []
+        for x in xs:
+            if x == int(x):
+                labels.append(str(int(x)))
+            else:
+                labels.append(str(x))
+        return labels
+
     def _set_axes_limits(self):
-        y_min = max([self.min_output, 0.1 * self.max_output])
+        self.y_min = max([self.min_output, 0.1 * self.max_output])
         self.ax.set_xlim([self.min_input, self.max_input])
-        self.ax.set_ylim([y_min, 1.1 * self.max_output])
+        self.ax.set_ylim([self.y_min, 1.1 * self.max_output])
 
     def _set_axes_ticks(self):
-        ticks = [1, 2, 5, 10, 20, 50, 100]
-        self.ax.set_xticks(ticks)
-        self.ax.set_yticks(ticks)
+        xlim = self.ax.get_xlim()
+        ylim = self.ax.get_ylim()
+        x_ticks = self._get_ticks_range(xlim[0], xlim[1])
+        y_ticks = self._get_ticks_range(ylim[0], ylim[1])
+        self.ax.set_xticks(x_ticks)
+        self.ax.set_xticklabels(self._format_tick_labels(x_ticks))
+        self.ax.set_yticks(y_ticks)
+        self.ax.set_yticklabels(self._format_tick_labels(y_ticks))
         self.ax.xaxis.set_major_formatter(ticker.ScalarFormatter())
         self.ax.yaxis.set_major_formatter(ticker.ScalarFormatter())
         self.ax.minorticks_off()
@@ -263,14 +287,21 @@ class RagonePlot:
         dx = p2[0] - p1[0]
         rotn = np.degrees(np.arctan2(dy, dx))
 
-        y_min = max([self.min_output, 0.1 * self.max_output])
+        y_lim = self.ax.get_ylim()
+        v_shift = 0.5
+        x0 = (
+            y_lim[0] * (y_lim[1] / y_lim[0]) ** v_shift
+        )  # weighted average in log scale
+        t0 = 1  # isochrone that we place at location x0
 
-        for label, scale in zip(["2 h", "1 h", "30 min"], [0.5, 1, 2]):
+        for label, scale in zip(["2 h", "1 h", "30 min"], [2, 1, 0.5]):
+            x_label = np.sqrt(t0 * x0**2 / scale)
+            y_label = np.sqrt(scale * t0 * x0**2)
             self.ax.annotate(
                 label,
-                xy=(scale * y_min, y_min),
-                ha="right",
-                va="bottom",
+                xy=(x_label, 1.1 * y_label),  # scale so label doesn't overlap with line
+                ha="center",
+                va="center",
                 rotation=rotn,
                 color="darkgray",
                 fontsize=8,
@@ -286,6 +317,20 @@ class RagonePlot:
         secx = self.ax.secondary_xaxis("top", functions=(ext2int, int2ext))
         secy = self.ax.secondary_yaxis("right", functions=(ext2int, int2ext))
 
+        # Set ticks for secondary axes
+        xlim = self.ax.get_xlim()
+        ylim = self.ax.get_ylim()
+        x_ticks = self._get_ticks_range(ext2int(xlim[0]), ext2int(xlim[1]))
+        y_ticks = self._get_ticks_range(ext2int(ylim[0]), ext2int(ylim[1]))
+        secx.set_xticks(x_ticks)
+        secx.set_xticklabels(self._format_tick_labels(x_ticks))
+        secy.set_yticks(y_ticks)
+        secy.set_yticklabels(self._format_tick_labels(y_ticks))
+        secx.xaxis.set_major_formatter(ticker.ScalarFormatter())
+        secy.yaxis.set_major_formatter(ticker.ScalarFormatter())
+        secx.minorticks_off()
+        secy.minorticks_off()
+
         def convert_labels(label):
             split_label = label.split("]")[0]
             split_label = split_label[0].lower() + split_label[1:]
@@ -296,7 +341,7 @@ class RagonePlot:
         secy.set_ylabel(convert_labels(self.output))
 
     def plot(self, show_plot=True):
-        plt.rcParams.update({'font.size': 14})
+        plt.rcParams.update({"font.size": 14})
         self.fig, self.ax = plt.subplots()
         skip_legend = False
 
