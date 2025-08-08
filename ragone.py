@@ -262,8 +262,8 @@ class RagonePlot:
         self.ax.set_xticklabels(self._format_tick_labels(x_ticks))
         self.ax.set_yticks(y_ticks)
         self.ax.set_yticklabels(self._format_tick_labels(y_ticks))
-        self.ax.xaxis.set_major_formatter(ticker.ScalarFormatter())
-        self.ax.yaxis.set_major_formatter(ticker.ScalarFormatter())
+        # self.ax.xaxis.set_major_formatter(ticker.ScalarFormatter())
+        # self.ax.yaxis.set_major_formatter(ticker.ScalarFormatter())
         self.ax.minorticks_off()
 
     def _draw_isochrones(self):
@@ -329,8 +329,8 @@ class RagonePlot:
         secx.set_xticklabels(self._format_tick_labels(x_ticks))
         secy.set_yticks(y_ticks)
         secy.set_yticklabels(self._format_tick_labels(y_ticks))
-        secx.xaxis.set_major_formatter(ticker.ScalarFormatter())
-        secy.yaxis.set_major_formatter(ticker.ScalarFormatter())
+        # secx.xaxis.set_major_formatter(ticker.ScalarFormatter())
+        # secy.yaxis.set_major_formatter(ticker.ScalarFormatter())
         secx.minorticks_off()
         secy.minorticks_off()
 
