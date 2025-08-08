@@ -288,18 +288,21 @@ class RagonePlot:
         rotn = np.degrees(np.arctan2(dy, dx))
 
         y_lim = self.ax.get_ylim()
-        v_shift = 0.5
+        v_post = 0.5
         x0 = (
-            y_lim[0] * (y_lim[1] / y_lim[0]) ** v_shift
+            y_lim[0] * (y_lim[1] / y_lim[0]) ** v_post
         )  # weighted average in log scale
         t0 = 1  # isochrone that we place at location x0
+        label_hshift = 0.9  # shift so label doesn't overlap with line
 
         for label, scale in zip(["2 h", "1 h", "30 min"], [2, 1, 0.5]):
-            x_label = np.sqrt(t0 * x0**2 / scale)
-            y_label = np.sqrt(scale * t0 * x0**2)
+            # Rationale: choose the position for the reference label and arrange
+            # others along line perpendicular to isochrones
+            x_label = label_hshift * np.sqrt(t0 * x0**2 / scale)
+            y_label = (t0 * x0**2) / x_label
             self.ax.annotate(
                 label,
-                xy=(x_label, 1.1 * y_label),  # scale so label doesn't overlap with line
+                xy=(x_label, y_label),
                 ha="center",
                 va="center",
                 rotation=rotn,
