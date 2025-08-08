@@ -2,6 +2,7 @@ import pybamm
 import numpy as np
 from ragone import RagoneSimulation, RagonePlot, get_parameter_values, get_options
 from pathlib import Path
+import matplotlib.pyplot as plt
 
 options, tag = get_options(SEI=True, plating=True, lam=True)
 
@@ -45,6 +46,16 @@ for label in filename_extension.keys():
     for i in cycles:
         values.append(aged_sol.all_first_states[i][f"X-averaged {label.lower()}"].entries[0])
     parameter_sweeps[label] = values
+
+# Make plots of parameter evolution
+fig, ax = plt.subplots()
+for label, values in parameter_sweeps.items():
+    ax.plot(cycles, values, label=label)
+
+ax.set_xlabel("Cycle number")
+ax.set_ylim(0, 1)
+ax.legend()
+fig.savefig(Path("figures") / f"aged_solution_evolution_vf.png", dpi=300)
 
 solver = pybamm.IDAKLUSolver(rtol=1e-8, atol=1e-10)
 
