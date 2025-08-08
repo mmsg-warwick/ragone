@@ -1,4 +1,5 @@
 import matplotlib.pyplot as plt
+import matplotlib.ticker as ticker
 from matplotlib import colormaps
 import numpy as np
 import pybamm
@@ -233,6 +234,14 @@ class RagonePlot:
         self.ax.set_xlim([self.min_input, self.max_input])
         self.ax.set_ylim([y_min, 1.1 * self.max_output])
 
+    def _set_axes_ticks(self):
+        ticks = [1, 2, 5, 10, 20, 50, 100]
+        self.ax.set_xticks(ticks)
+        self.ax.set_yticks(ticks)
+        self.ax.xaxis.set_major_formatter(ticker.ScalarFormatter())
+        self.ax.yaxis.set_major_formatter(ticker.ScalarFormatter())
+        self.ax.minorticks_off()
+
     def _draw_isochrones(self):
         # compute max and min isochrones
         min_iso = np.floor(np.log(self.min_output / self.max_input) / np.log(2))
@@ -287,6 +296,7 @@ class RagonePlot:
         secy.set_ylabel(convert_labels(self.output))
 
     def plot(self, show_plot=True):
+        plt.rcParams.update({'font.size': 14})
         self.fig, self.ax = plt.subplots()
         skip_legend = False
 
@@ -309,6 +319,7 @@ class RagonePlot:
         # Set labels
         self.ax.set_xlabel(self.input)
         self.ax.set_ylabel(self.output)
+        self._set_axes_ticks()
 
         # Produce secondary axes
         if self.scaling:
