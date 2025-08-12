@@ -340,8 +340,8 @@ class RagonePlot:
         secx.set_xticklabels(self._format_tick_labels(x_ticks))
         secy.set_yticks(y_ticks)
         secy.set_yticklabels(self._format_tick_labels(y_ticks))
-        secx.xaxis.set_major_formatter(ticker.ScalarFormatter())
-        secy.yaxis.set_major_formatter(ticker.ScalarFormatter())
+        # secx.xaxis.set_major_formatter(ticker.ScalarFormatter())
+        # secy.yaxis.set_major_formatter(ticker.ScalarFormatter())
         secx.minorticks_off()
         secy.minorticks_off()
 
