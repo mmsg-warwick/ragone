@@ -26,7 +26,9 @@ var_pts = {
 
 step = 100
 
-cycles = [0] + [i * step - 1 for i in range(1, len(aged_sol.all_first_states) // step + 1)]
+cycles = [0] + [
+    i * step - 1 for i in range(1, len(aged_sol.all_first_states) // step + 1)
+]
 
 labels = [f"Cycle {i + 1}" for i in cycles]
 labels[1:-1] = [None] * (len(labels) - 2)
@@ -44,7 +46,9 @@ print("Extracting parameter values from aged solution...")
 for label in filename_extension.keys():
     values = []
     for i in cycles:
-        values.append(aged_sol.all_first_states[i][f"X-averaged {label.lower()}"].entries[0])
+        values.append(
+            aged_sol.all_first_states[i][f"X-averaged {label.lower()}"].entries[0]
+        )
     parameter_sweeps[label] = values
 
 # Make plots of parameter evolution
