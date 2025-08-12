@@ -385,7 +385,7 @@ class RagonePlot:
             self._set_secondary_axes()
 
         if not skip_legend:
-            self.ax.legend()
+            self.ax.legend("lower left")
         self.fig.tight_layout()
 
         # annotate isochrones (in the end to get the right transformation)
