@@ -200,13 +200,25 @@ class RagonePlot:
     ):
         self.solutions = solutions if isinstance(solutions, list) else [solutions]
 
+        # TODO: fix for multiple modes
         modes = {sol.mode for sol in self.solutions}
+        if len(modes) == 1:
+            self.mode = self.solutions[0].mode
+            self.input = self.solutions[0].input
+            self.output = self.solutions[0].output
         if len(modes) > 1:
-            raise ValueError("All solutions must have the same mode")
-
-        self.mode = self.solutions[0].mode
-        self.input = self.solutions[0].input
-        self.output = self.solutions[0].output
+            self.mode = "power"
+            self.input = "Power [W]"
+            self.output = "Energy [W.h]"
+            for sol in self.solutions:
+                if sol.mode == "current" and (
+                    "Power [W]" not in sol.data.keys() or "Energy [W.h]" not in sol.data.keys()
+                ):
+                    raise ValueError(
+                        "All solutions must either have the same mode or have the"
+                        " input/output variables converted to watts (use "
+                        "`convert_to_watts=True` in the RagoneSimulation)."
+                    )
 
         self._compute_data_limits()
 
@@ -259,11 +271,12 @@ class RagonePlot:
         x_ticks = self._get_ticks_range(xlim[0], xlim[1])
         y_ticks = self._get_ticks_range(ylim[0], ylim[1])
         self.ax.set_xticks(x_ticks)
+        print(self._format_tick_labels(x_ticks))
         self.ax.set_xticklabels(self._format_tick_labels(x_ticks))
         self.ax.set_yticks(y_ticks)
         self.ax.set_yticklabels(self._format_tick_labels(y_ticks))
-        self.ax.xaxis.set_major_formatter(ticker.ScalarFormatter())
-        self.ax.yaxis.set_major_formatter(ticker.ScalarFormatter())
+        # self.ax.xaxis.set_major_formatter(ticker.ScalarFormatter())
+        # self.ax.yaxis.set_major_formatter(ticker.ScalarFormatter())
         self.ax.minorticks_off()
 
     def _draw_isochrones(self):
@@ -289,9 +302,7 @@ class RagonePlot:
 
         y_lim = self.ax.get_ylim()
         v_post = 0.5
-        x0 = (
-            y_lim[0] * (y_lim[1] / y_lim[0]) ** v_post
-        )  # weighted average in log scale
+        x0 = y_lim[0] * (y_lim[1] / y_lim[0]) ** v_post  # weighted average in log scale
         t0 = 1  # isochrone that we place at location x0
         label_hshift = 0.9  # shift so label doesn't overlap with line
 
@@ -510,34 +521,40 @@ class RagoneSimulation:
         outputs = []
         inputs = []
 
+        input_watts = []
+        output_watts = []
+
         for sol, value in zip(solutions, self.value_range):
             if sol is None:
                 times.append(np.nan)
                 outputs.append(np.nan)
                 inputs.append(np.nan)
+                if self.mode == "current" and self.convert_to_watts:
+                    input_watts.append(np.nan)
+                    output_watts.append(np.nan)
             else:
                 time = sol["Time [h]"].entries[-1]
-                if self.mode == "current" and self.convert_to_watts:
-                    input = (
-                        np.trapz(sol["Power [W]"].entries, sol["Time [h]"].entries)
-                        / time
-                    )
-                    output = self.sign * (
-                        sol["Discharge energy [W.h]"].entries[-1]
-                        - sol["Discharge energy [W.h]"].entries[0]
-                    )
-                else:
-                    input = value
-                    output = input * time
+                input = value
+                output = input * time
+
                 times.append(time)
                 outputs.append(output)
                 inputs.append(input)
+
+                if self.mode == "current" and self.convert_to_watts:
+                    energy = self.sign * np.trapz(sol["Power [W]"].entries, sol["Time [h]"].entries)
+                    input_watts.append(energy / time)
+                    output_watts.append(energy)
 
         data = {
             "Time [h]": np.array(times),
             self.input: np.array(inputs),
             self.output: np.array(outputs),
         }
+
+        if self.mode == "current" and self.convert_to_watts:
+            data["Power [W]"] = np.array(input_watts)
+            data["Energy [W.h]"] = np.array(output_watts)
 
         self.solution = RagoneSolution(data, self.mode)
         return self.solution
