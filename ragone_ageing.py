@@ -1,7 +1,7 @@
 import pybamm
 import numpy as np
 from ragone import RagoneSimulation, RagonePlot, get_options, get_parameter_values
-from os import path
+from pathlib import Path
 import argparse
 
 parser = argparse.ArgumentParser(description="Run battery ageing simulation.")
@@ -32,7 +32,7 @@ parameter_values = get_parameter_values(ageing=False)
 
 volume = parameter_values["Cell volume [m3]"] * 1000
 
-aged_sol = pybamm.load(path.join("data", f"aged_solution{tag}.pkl"))
+aged_sol = pybamm.load(Path("data") / f"aged_solution{tag}.pkl")
 
 var_pts = {
     "x_n": 30,
@@ -81,4 +81,4 @@ for mode, value_range in value_ranges.items():
 
     plts = RagonePlot(solutions, labels=labels, volume=volume)
     fig, _ = plts.plot(show_plot=False)
-    fig.savefig("./figures/" + f"ragone_ageing{tag}_{mode}.png", dpi=300)
+    fig.savefig(Path("figures") / f"ragone_ageing_{mode}{tag}.png", dpi=300)

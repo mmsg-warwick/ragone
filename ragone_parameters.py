@@ -90,6 +90,6 @@ for mode, value_range in value_ranges.items():
         plt = RagonePlot(solutions, labels=labels, volume=volume)
         fig, _ = plt.plot(show_plot=False)
         fig.savefig(
-            "./figures/" + f"ragone_{filename_extension[parameter_name]}_{mode}.png",
+            Path("figures") / f"ragone_parameters_{mode}_{filename_extension[parameter_name]}.png",
             dpi=300,
         )

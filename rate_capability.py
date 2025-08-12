@@ -1,13 +1,21 @@
 import pybamm
 import numpy as np
 import matplotlib.pyplot as plt
-from ragone import RagoneSimulation, get_options
-from os import path
+from ragone import RagoneSimulation, get_options, get_parameter_values
+from pathlib import Path
+import argparse
+
+plt.rcParams.update({"font.size": 14})
+
+parser = argparse.ArgumentParser(description="Run battery rate capability plot.")
+parser.add_argument(
+    "--fast", action="store_true", help="Fast charging (default: disabled)"
+)
+args = parser.parse_args()
 
 options, tag = get_options(SEI=True, plating=True, lam=True)
 
-fast = False
-if fast:
+if args.fast:
     tag = "_fast" + tag
 
 model = pybamm.lithium_ion.DFN(
@@ -19,7 +27,7 @@ parameter_values = get_parameter_values(ageing=False)
 
 volume = parameter_values["Cell volume [m3]"] * 1000
 
-aged_sol = pybamm.load(path.join("data", f"aged_solution{tag}.pkl"))
+aged_sol = pybamm.load(Path("data") / f"aged_solution{tag}.pkl")
 
 var_pts = {
     "x_n": 30,
@@ -78,5 +86,5 @@ for mode, value_range in zip(modes, value_ranges):
     ax.set_ylabel(sol.output)
     ax.set_ylim(0, 20)
     ax.legend()
-    fig.savefig("./figures/" + f"rate_capability_ageing{tag}_{mode}.png", dpi=300)
+    fig.savefig(Path("figures") / f"rate_capability_ageing_{mode}{tag}.png", dpi=300)
     print("Saved figure for mode:", mode)
