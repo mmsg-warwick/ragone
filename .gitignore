@@ -1,2 +1,8 @@
 # Ignore output files
 *.out
+
+# Ignore VS Code folder
+.vscode/
+
+# Ignore pycache
+__pycache__/
