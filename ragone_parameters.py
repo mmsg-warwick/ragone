@@ -4,6 +4,8 @@ from ragone import RagoneSimulation, RagonePlot, get_parameter_values, get_optio
 from pathlib import Path
 import matplotlib.pyplot as plt
 
+plt.rcParams.update({"font.size": 14})
+
 options, tag = get_options(SEI=True, plating=True, lam=True)
 
 model = pybamm.lithium_ion.DFN(
@@ -58,7 +60,7 @@ for label, values in parameter_sweeps.items():
 
 ax.set_xlabel("Cycle number")
 ax.set_ylim(0, 1)
-ax.legend()
+ax.legend(["Neg. porosity", "Neg. AMVF", "Pos. porosity", "Pos. AMVF"], loc="upper right")
 fig.savefig(Path("figures") / f"aged_solution_evolution_vf.png", dpi=300)
 
 solver = pybamm.IDAKLUSolver(rtol=1e-8, atol=1e-10)

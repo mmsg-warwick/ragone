@@ -1,5 +1,6 @@
 import pybamm
 import numpy as np
+import pandas as pd
 from ragone import RagoneSimulation, RagonePlot, get_options, get_parameter_values
 from pathlib import Path
 import argparse
@@ -42,6 +43,13 @@ var_pts = {
     "r_p": 20,
 }
 
+cycles = [0] + [
+    i * step - 1 for i in range(1, len(aged_sol.all_first_states) // step + 1)
+]
+
+labels = [f"Cycle {i + 1}" for i in cycles]
+labels[1:-1] = [None] * (len(labels) - 2)
+
 # solutions = [sol.all_first_states[0], sol.all_first_states[-1]]
 ageing_solutions = [aged_sol.all_first_states[0]] + aged_sol.all_first_states[
     step - 1 :: step
@@ -51,9 +59,6 @@ value_ranges = {
     "power": np.logspace(np.log10(0.5), np.log10(100), 50),
     "current": np.logspace(np.log10(0.1), np.log10(30), 50),
 }
-
-labels = [f"Cycle {step * i}" for i in range(len(ageing_solutions))]
-labels[1:-1] = [None] * (len(labels) - 2)
 
 for mode, value_range in value_ranges.items():
     solutions = []
@@ -82,3 +87,17 @@ for mode, value_range in value_ranges.items():
     plts = RagonePlot(solutions, labels=labels, volume=volume)
     fig, _ = plts.plot(show_plot=False)
     fig.savefig(Path("figures") / f"ragone_ageing_{mode}{tag}.png", dpi=300)
+
+    if mode == "power":
+        metrics = {"Cycle number": []}
+        for cycle, sol in zip(cycles, solutions):
+            sol.fit_log()
+            metrics["Cycle number"].append(cycle + 1)
+
+            for key in sol.metrics.keys():
+                if key not in metrics:
+                    metrics[key] = []
+                metrics[key].append(sol.metrics[key])
+
+        metrics_df = pd.DataFrame(metrics)
+        metrics_df.to_csv(Path("data") / f"ragone_ageing_metrics_{mode}{tag}.csv", index=False)
