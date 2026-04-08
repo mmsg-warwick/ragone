@@ -31,6 +31,9 @@ def get_parameter_values(ageing=True):
     parameter_values["Negative electrode OCP [V]"] = Chen2020[
         "Negative electrode OCP [V]"
     ]
+    parameter_values["Electrolyte conductivity [S.m-1]"] = 0.95
+    parameter_values["Electrolyte diffusivity [m2.s-1]"] = 4e-10
+
     if ageing:
         parameter_values["SEI reaction exchange current density [A.m-2]"] = (
             1.5e-7 * 0.15 * 1
@@ -212,7 +215,8 @@ class RagonePlot:
             self.output = "Energy [W.h]"
             for sol in self.solutions:
                 if sol.mode == "current" and (
-                    "Power [W]" not in sol.data.keys() or "Energy [W.h]" not in sol.data.keys()
+                    "Power [W]" not in sol.data.keys()
+                    or "Energy [W.h]" not in sol.data.keys()
                 ):
                     raise ValueError(
                         "All solutions must either have the same mode or have the"
@@ -371,7 +375,8 @@ class RagonePlot:
 
         # Draw Ragone plots
         for sol, color, label in zip(self.solutions, self.colors, self.labels):
-            self.ax.loglog(
+            # self.ax.loglog(
+            self.ax.plot(
                 sol.data[self.input], sol.data[self.output], color=color, label=label
             )
 
@@ -542,7 +547,9 @@ class RagoneSimulation:
                 inputs.append(input)
 
                 if self.mode == "current" and self.convert_to_watts:
-                    energy = self.sign * np.trapz(sol["Power [W]"].entries, sol["Time [h]"].entries)
+                    energy = self.sign * np.trapz(
+                        sol["Power [W]"].entries, sol["Time [h]"].entries
+                    )
                     input_watts.append(energy / time)
                     output_watts.append(energy)
 
