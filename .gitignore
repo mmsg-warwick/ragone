@@ -9,3 +9,7 @@ __pycache__/
 
 # Ignore modules file, for self-reference only
 modules
+
+# Ignore data and figures files
+data/
+figures/
