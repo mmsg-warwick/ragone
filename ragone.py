@@ -547,9 +547,8 @@ class RagoneSimulation:
                 inputs.append(input)
 
                 if self.mode == "current" and self.convert_to_watts:
-                    energy = self.sign * np.trapz(
-                        sol["Power [W]"].entries, sol["Time [h]"].entries
-                    )
+                    # energy = self.sign * np.trapz(sol["Power [W]"].entries, sol["Time [h]"].entries)
+                    energy = self.sign * (sol["Discharge energy [W.h]"].entries[-1] - sol["Discharge energy [W.h]"].entries[0])
                     input_watts.append(energy / time)
                     output_watts.append(energy)
 

@@ -1,0 +1,15 @@
+# Ignore output files
+*.out
+
+# Ignore VS Code folder
+.vscode/
+
+# Ignore pycache
+__pycache__/
+
+# Ignore modules file, for self-reference only
+modules
+
+# Ignore data and figures files
+data/
+figures/
