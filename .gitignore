@@ -13,3 +13,4 @@ modules
 # Ignore data and figures files
 data/
 figures/
+figures_old/
