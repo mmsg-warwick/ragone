@@ -20,3 +20,4 @@ figures_old/
 
 # Ignore debug files
 debug*.py
+debug*.ipynb
