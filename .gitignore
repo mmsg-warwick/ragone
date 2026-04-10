@@ -14,3 +14,6 @@ modules
 data/
 figures/
 figures_old/
+
+# Ignore slurm files
+*.slurm
