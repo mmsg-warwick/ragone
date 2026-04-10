@@ -17,3 +17,6 @@ figures_old/
 
 # Ignore slurm files
 *.slurm
+
+# Ignore debug files
+debug*.py
