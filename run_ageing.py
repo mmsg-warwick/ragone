@@ -1,5 +1,5 @@
 import pybamm
-from ragone import get_options, get_parameter_values
+from ragone import get_options, get_parameter_values, get_var_pts
 from os import path
 import argparse
 
@@ -40,20 +40,16 @@ output_variables = [
     "Discharge capacity [A.h]",
     "Power [W]",
     "Negative electrode porosity",
+    "Positive electrode porosity",
+    "Throughput capacity [A.h]",
 ]
 
-var_pts = {
-    "x_n": 30,
-    "x_s": 30,
-    "x_p": 30,
-    "r_n": 20,
-    "r_p": 20,
-}
+var_pts = get_var_pts()
 
 solver = pybamm.IDAKLUSolver(
     output_variables=output_variables,
-    # rtol=1e-6,
-    # atol=1e-8,
+    rtol=1e-6,
+    atol=1e-8,
     # options={
     #     "max_error_test_failures": 200,
     #     "max_convergence_failures": 10000,
@@ -97,6 +93,10 @@ sim = pybamm.Simulation(
 sol = sim.solve(save_at_cycles=save_at_cycles)
 
 # print(sol["Negative electrode porosity"].entries)
+
+for k in list(model.rhs.keys()) + list(model.algebraic.keys()):
+    symbol = sol.all_first_states[2][k.name]
+    print(f"{k.name}: ", symbol)
 
 sol.save(path.join("data", f"aged_solution{tag}.pkl"))
 # sol.save(path.join("data", f"aged_solution_fast{tag}.pkl"))

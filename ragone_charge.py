@@ -1,6 +1,5 @@
 import pybamm
 import numpy as np
-import gc
 from util import compute_ragone, plot_ragone
 
 model = pybamm.lithium_ion.DFN(
@@ -89,4 +88,4 @@ for value_range, mode in zip(value_ranges, modes):
         labels.append(f"{mode} - {direction}")
 
 fig = plot_ragone(inputs, outputs, mode="power", labels=labels)
-fig.savefig("./figures/" + f"ragone_compare_modes_directions.png", dpi=300)
+fig.savefig("./figures/" + "ragone_compare_modes_directions.png", dpi=300)

@@ -1,5 +1,4 @@
 import matplotlib.pyplot as plt
-import matplotlib.ticker as ticker
 from matplotlib import colormaps
 import numpy as np
 import pybamm
@@ -28,17 +27,26 @@ def get_options(SEI=False, plating=False, lam=False):
 def get_parameter_values(ageing=True):
     parameter_values = pybamm.ParameterValues("OKane2022")
     Chen2020 = pybamm.ParameterValues("Chen2020")
+    ORegan2022 = pybamm.ParameterValues("ORegan2022")
     parameter_values["Negative electrode OCP [V]"] = Chen2020[
         "Negative electrode OCP [V]"
     ]
-    parameter_values["Electrolyte conductivity [S.m-1]"] = 0.95
-    parameter_values["Electrolyte diffusivity [m2.s-1]"] = 4e-10
+
+    for param in [
+        "Cation transference number",
+        "Thermodynamic factor",
+        "Electrolyte conductivity [S.m-1]",
+        "Electrolyte diffusivity [m2.s-1]",
+    ]:
+        parameter_values[param] = ORegan2022[param]
 
     if ageing:
         parameter_values["SEI reaction exchange current density [A.m-2]"] = (
-            1.5e-7 * 0.15 * 1
+            1.5e-7 * 0.15 * 2
         )  # was *2
-        parameter_values["Lithium plating kinetic rate constant [m.s-1]"] = 5e-12 * 2
+        parameter_values["Lithium plating kinetic rate constant [m.s-1]"] = (
+            5e-12 * 1
+        )  # was *2
         parameter_values["Negative electrode LAM constant proportional term [s-1]"] = (
             2.7778e-07 * 2
         )
@@ -56,6 +64,17 @@ def get_parameter_values(ageing=True):
         parameter_values["Positive electrode LAM constant proportional term [s-1]"] = 0
 
     return parameter_values
+
+
+def get_var_pts():
+    var_pts = {
+        "x_n": 50,
+        "x_s": 30,
+        "x_p": 50,
+        "r_n": 20,
+        "r_p": 20,
+    }
+    return var_pts
 
 
 class RagoneSolution:
@@ -78,14 +97,20 @@ class RagoneSolution:
         self._raw_metrics = None
         self._metrics = None
 
-    def plot(self, labels=None, volume=None, mass=None):
-        plot = RagonePlot(self, labels=labels, volume=volume, mass=mass)
+    def plot(self, labels=None, volume=None, mass=None, scale="loglog"):
+        plot = RagonePlot(self, labels=labels, volume=volume, mass=mass, scale=scale)
         return plot.plot()
 
     def _gaussian_log(self, x, E0, P0, n):
         return (E0 - (10**x / P0) ** n) / np.log(10)
 
     def _gaussian(self, x, E0, P0, n):
+        return E0 * np.exp(-((x / P0) ** n))
+
+    def _gaussian_loglog(self, x, E0, P0, n):
+        return (E0 - (10**x / P0) ** n) / np.log(10)
+
+    def _gaussian_linear(self, x, E0, P0, n):
         return E0 * np.exp(-((x / P0) ** n))
 
     def fit_log(self):
@@ -111,6 +136,27 @@ class RagoneSolution:
             self.data[self.output],
             bounds=(0, np.inf),
         )
+        return popt
+
+    def fit(self):
+        if self.scale == "loglog":
+            fit_fun = self._gaussian_loglog
+            fit_input = np.log10(self.data[self.input])
+            fit_output = np.log10(self.data[self.output])
+        elif self.scale == "linear":
+            fit_fun = self._gaussian_linear
+            fit_input = self.data[self.input]
+            fit_output = self.data[self.output]
+
+        popt, _ = curve_fit(fit_fun, fit_input, fit_output, bounds=(0, np.inf))
+
+        self._raw_metrics = popt
+        self.metrics = {
+            f"Reference {self.output[0].lower() + self.output[1:]}": np.exp(popt[0]),
+            f"Reference {self.input[0].lower() + self.input[1:]}": popt[1],
+            "n": popt[2],
+            "Fitting scale": self.scale,
+        }
         return popt
 
     def plot_log(self):
@@ -199,7 +245,14 @@ class RagoneSolution:
 
 class RagonePlot:
     def __init__(
-        self, solutions, labels=None, volume=None, mass=None, colormap="plasma"
+        self,
+        solutions,
+        labels=None,
+        volume=None,
+        mass=None,
+        colormap="plasma",
+        scale="loglog",
+        fit=False,
     ):
         self.solutions = solutions if isinstance(solutions, list) else [solutions]
 
@@ -227,6 +280,12 @@ class RagonePlot:
         self._compute_data_limits()
 
         self.labels = labels
+
+        if scale not in ["loglog", "linear"]:
+            raise ValueError("scale must be either 'loglog' or 'linear'")
+
+        self.scale = scale
+        self.fit = fit
 
         if volume and mass:
             raise ValueError("Only one of volume or mass can be provided")
@@ -265,22 +324,27 @@ class RagonePlot:
         return labels
 
     def _set_axes_limits(self):
-        self.y_min = max([self.min_output, 0.1 * self.max_output])
-        self.ax.set_xlim([self.min_input, self.max_input])
-        self.ax.set_ylim([self.y_min, 1.1 * self.max_output])
+        y_min = max([self.min_output, 0.1 * self.max_output])
+        if self.scale == "loglog":
+            y_min = max([self.min_output, 0.1 * self.max_output])
+            self.ax.set_xlim([self.min_input, self.max_input])
+            self.ax.set_ylim([y_min, 1.1 * self.max_output])
+        elif self.scale == "linear":
+            self.ax.set_xlim([0, self.max_input])
+            self.ax.set_ylim([0, 1.1 * self.max_output])
 
     def _set_axes_ticks(self):
-        xlim = self.ax.get_xlim()
-        ylim = self.ax.get_ylim()
-        x_ticks = self._get_ticks_range(xlim[0], xlim[1])
-        y_ticks = self._get_ticks_range(ylim[0], ylim[1])
-        self.ax.set_xticks(x_ticks)
-        print(self._format_tick_labels(x_ticks))
-        self.ax.set_xticklabels(self._format_tick_labels(x_ticks))
-        self.ax.set_yticks(y_ticks)
-        self.ax.set_yticklabels(self._format_tick_labels(y_ticks))
-        # self.ax.xaxis.set_major_formatter(ticker.ScalarFormatter())
-        # self.ax.yaxis.set_major_formatter(ticker.ScalarFormatter())
+        if self.scale == "loglog":
+            xlim = self.ax.get_xlim()
+            ylim = self.ax.get_ylim()
+            x_ticks = self._get_ticks_range(xlim[0], xlim[1])
+            y_ticks = self._get_ticks_range(ylim[0], ylim[1])
+            self.ax.set_xticks(x_ticks)
+            self.ax.set_xticklabels(self._format_tick_labels(x_ticks))
+            self.ax.set_yticks(y_ticks)
+            self.ax.set_yticklabels(self._format_tick_labels(y_ticks))
+            # self.ax.xaxis.set_major_formatter(ticker.ScalarFormatter())
+            # self.ax.yaxis.set_major_formatter(ticker.ScalarFormatter())
         self.ax.minorticks_off()
 
     def _draw_isochrones(self):
@@ -298,11 +362,20 @@ class RagonePlot:
             )
 
     def _annotate_isochrones(self):
-        p1 = self.ax.transData.transform_point((1, 1))
-        p2 = self.ax.transData.transform_point((2, 2))
-        dy = p2[1] - p1[1]
-        dx = p2[0] - p1[0]
-        rotn = np.degrees(np.arctan2(dy, dx))
+        if self.scale == "loglog":
+            p1 = self.ax.transData.transform_point((1, 1))
+            p2 = self.ax.transData.transform_point((2, 2))
+            dy = p2[1] - p1[1]
+            dx = p2[0] - p1[0]
+            rotations = [np.degrees(np.arctan2(dy, dx))] * 3
+        elif self.scale == "linear":
+            rotations = []
+            for t in [3, 2, 1.5]:
+                p1 = self.ax.transData.transform_point((1, 1))
+                p2 = self.ax.transData.transform_point((2, t))
+                dy = p2[1] - p1[1]
+                dx = p2[0] - p1[0]
+                rotations.append(np.degrees(np.arctan2(dy, dx)))
 
         y_lim = self.ax.get_ylim()
         v_post = 0.5
@@ -310,7 +383,7 @@ class RagonePlot:
         t0 = 1  # isochrone that we place at location x0
         label_hshift = 0.9  # shift so label doesn't overlap with line
 
-        for label, scale in zip(["2 h", "1 h", "30 min"], [2, 1, 0.5]):
+        for label, scale, rotn in zip(["2 h", "1 h", "30 min"], [2, 1, 0.5], rotations):
             # Rationale: choose the position for the reference label and arrange
             # others along line perpendicular to isochrones
             x_label = label_hshift * np.sqrt(t0 * x0**2 / scale)
@@ -335,19 +408,20 @@ class RagonePlot:
         secx = self.ax.secondary_xaxis("top", functions=(ext2int, int2ext))
         secy = self.ax.secondary_yaxis("right", functions=(ext2int, int2ext))
 
-        # Set ticks for secondary axes
-        xlim = self.ax.get_xlim()
-        ylim = self.ax.get_ylim()
-        x_ticks = self._get_ticks_range(ext2int(xlim[0]), ext2int(xlim[1]))
-        y_ticks = self._get_ticks_range(ext2int(ylim[0]), ext2int(ylim[1]))
-        secx.set_xticks(x_ticks)
-        secx.set_xticklabels(self._format_tick_labels(x_ticks))
-        secy.set_yticks(y_ticks)
-        secy.set_yticklabels(self._format_tick_labels(y_ticks))
-        # secx.xaxis.set_major_formatter(ticker.ScalarFormatter())
-        # secy.yaxis.set_major_formatter(ticker.ScalarFormatter())
-        secx.minorticks_off()
-        secy.minorticks_off()
+        # Set ticks for secondary axes (loglog only)
+        if self.scale == "loglog":
+            xlim = self.ax.get_xlim()
+            ylim = self.ax.get_ylim()
+            x_ticks = self._get_ticks_range(ext2int(xlim[0]), ext2int(xlim[1]))
+            y_ticks = self._get_ticks_range(ext2int(ylim[0]), ext2int(ylim[1]))
+            secx.set_xticks(x_ticks)
+            secx.set_xticklabels(self._format_tick_labels(x_ticks))
+            secy.set_yticks(y_ticks)
+            secy.set_yticklabels(self._format_tick_labels(y_ticks))
+            # secx.xaxis.set_major_formatter(ticker.ScalarFormatter())
+            # secy.yaxis.set_major_formatter(ticker.ScalarFormatter())
+            secx.minorticks_off()
+            secy.minorticks_off()
 
         def convert_labels(label):
             split_label = label.split("]")[0]
@@ -374,10 +448,41 @@ class RagonePlot:
         self._draw_isochrones()
 
         # Draw Ragone plots
+        if self.scale == "loglog":
+            plotfun = self.ax.loglog
+        elif self.scale == "linear":
+            plotfun = self.ax.plot
+
         for sol, color, label in zip(self.solutions, self.colors, self.labels):
-            # self.ax.loglog(
-            self.ax.plot(
-                sol.data[self.input], sol.data[self.output], color=color, label=label
+            if self.fit:
+                if sol._raw_metrics is None:
+                    sol.fit_log()
+                marker = "."
+                linestyle = "none"
+
+                plotfun(
+                    sol.data[self.input],
+                    sol._gaussian(
+                        sol.data[self.input],
+                        np.exp(sol._raw_metrics[0]),
+                        sol._raw_metrics[1],
+                        sol._raw_metrics[2],
+                    ),
+                    color="darkgray",
+                    label=None,
+                    linestyle="-",
+                )
+            else:
+                marker = None
+                linestyle = "-"
+
+            plotfun(
+                sol.data[self.input],
+                sol.data[self.output],
+                color=color,
+                label=label,
+                marker=marker,
+                linestyle=linestyle,
             )
 
         # Set labels
@@ -390,7 +495,10 @@ class RagonePlot:
             self._set_secondary_axes()
 
         if not skip_legend:
-            self.ax.legend(loc="lower left")
+            if self.scale == "loglog":
+                self.ax.legend(loc="lower left")
+            elif self.scale == "linear":
+                self.ax.legend(loc="upper right")
         self.fig.tight_layout()
 
         # annotate isochrones (in the end to get the right transformation)
@@ -487,7 +595,7 @@ class RagoneSimulation:
 
         # Loop over value range
         for i, value in enumerate(self.value_range):
-            print(f"Running simulation {i+1} of {len(self.value_range)}")
+            print(f"Running simulation {i + 1} of {len(self.value_range)}")
             duration = 1e4 / value * self.ref_value
 
             try:
@@ -548,7 +656,10 @@ class RagoneSimulation:
 
                 if self.mode == "current" and self.convert_to_watts:
                     # energy = self.sign * np.trapz(sol["Power [W]"].entries, sol["Time [h]"].entries)
-                    energy = self.sign * (sol["Discharge energy [W.h]"].entries[-1] - sol["Discharge energy [W.h]"].entries[0])
+                    energy = self.sign * (
+                        sol["Discharge energy [W.h]"].entries[-1]
+                        - sol["Discharge energy [W.h]"].entries[0]
+                    )
                     input_watts.append(energy / time)
                     output_watts.append(energy)
 

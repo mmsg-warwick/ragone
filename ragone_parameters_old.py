@@ -1,7 +1,5 @@
 import pybamm
 import numpy as np
-import gc
-from util import compute_ragone, plot_ragone
 from ragone import RagoneSimulation, RagonePlot
 
 model = pybamm.lithium_ion.DFN(
@@ -107,7 +105,7 @@ for mode, value_range in value_ranges.items():
             labels = [f"{parameter_value:.3e}" for parameter_value in parameter_range]
 
         for i, parameter_value in enumerate(parameter_range):
-            print(f"Running Ragone plot for solution {i+1} of {len(parameter_range)}")
+            print(f"Running Ragone plot for solution {i + 1} of {len(parameter_range)}")
             edited_parameter_values[parameter_name] = parameter_value
             sim = RagoneSimulation(
                 model,

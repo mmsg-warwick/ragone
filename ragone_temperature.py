@@ -1,6 +1,5 @@
 import pybamm
 import numpy as np
-import gc
 from util import compute_ragone, plot_ragone
 
 model = pybamm.lithium_ion.DFN()

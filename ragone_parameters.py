@@ -1,6 +1,12 @@
 import pybamm
 import numpy as np
-from ragone import RagoneSimulation, RagonePlot, get_parameter_values, get_options
+from ragone import (
+    RagoneSimulation,
+    RagonePlot,
+    get_parameter_values,
+    get_options,
+    get_var_pts,
+)
 from pathlib import Path
 import matplotlib.pyplot as plt
 
@@ -18,13 +24,7 @@ volume = parameter_values["Cell volume [m3]"] * 1000
 
 aged_sol = pybamm.load(Path("data") / f"aged_solution{tag}.pkl")
 
-var_pts = {
-    "x_n": 30,
-    "x_s": 30,
-    "x_p": 30,
-    "r_n": 20,
-    "r_p": 20,
-}
+var_pts = get_var_pts()
 
 step = 100
 
@@ -60,8 +60,10 @@ for label, values in parameter_sweeps.items():
 
 ax.set_xlabel("Cycle number")
 ax.set_ylim(0, 1)
-ax.legend(["Neg. porosity", "Neg. AMVF", "Pos. porosity", "Pos. AMVF"], loc="upper right")
-fig.savefig(Path("figures") / f"aged_solution_evolution_vf.png", dpi=300)
+ax.legend(
+    ["Neg. porosity", "Neg. AMVF", "Pos. porosity", "Pos. AMVF"], loc="upper right"
+)
+fig.savefig(Path("figures") / "aged_solution_evolution_vf.png", dpi=300)
 
 solver = pybamm.IDAKLUSolver(rtol=1e-8, atol=1e-10)
 
@@ -78,7 +80,7 @@ for mode, value_range in value_ranges.items():
 
         print(f"Running Ragone plot for parameter: {parameter_name}")
         for i, parameter_value in enumerate(parameter_range):
-            print(f"Running Ragone plot for solution {i+1} of {len(parameter_range)}")
+            print(f"Running Ragone plot for solution {i + 1} of {len(parameter_range)}")
             edited_parameter_values[parameter_name] = parameter_value
             sim = RagoneSimulation(
                 model,
@@ -93,9 +95,47 @@ for mode, value_range in value_ranges.items():
 
             solutions.append(sol)
 
-        plt = RagonePlot(solutions, labels=labels, volume=volume)
+        plt = RagonePlot(solutions, labels=labels, volume=volume, scale="loglog")
         fig, _ = plt.plot(show_plot=False)
         fig.savefig(
-            Path("figures") / f"ragone_parameters_{mode}_{filename_extension[parameter_name]}.png",
+            Path("figures")
+            / f"ragone_parameters_{mode}_{filename_extension[parameter_name]}_loglog.png",
+            dpi=300,
+        )
+
+# Now rerun for linear scale
+value_ranges = {
+    "power": np.linspace(0.5, 100, 50),
+    "current": np.linspace(0.1, 30, 50),
+}
+
+for mode, value_range in value_ranges.items():
+    print(f"Starting Ragone plots - {mode} mode")
+    for parameter_name, parameter_range in parameter_sweeps.items():
+        solutions = []
+        edited_parameter_values = get_parameter_values(ageing=False)
+
+        print(f"Running Ragone plot for parameter: {parameter_name}")
+        for i, parameter_value in enumerate(parameter_range):
+            print(f"Running Ragone plot for solution {i + 1} of {len(parameter_range)}")
+            edited_parameter_values[parameter_name] = parameter_value
+            sim = RagoneSimulation(
+                model,
+                parameter_values=edited_parameter_values,
+                value_range=value_range,
+                var_pts=var_pts,
+                solver=solver,
+                mode=mode,
+            )
+
+            sol = sim.solve()
+
+            solutions.append(sol)
+
+        plt = RagonePlot(solutions, labels=labels, volume=volume, scale="linear")
+        fig, _ = plt.plot(show_plot=False)
+        fig.savefig(
+            Path("figures")
+            / f"ragone_parameters_{mode}_{filename_extension[parameter_name]}_linear.png",
             dpi=300,
         )
