@@ -1,14 +1,18 @@
 import pybamm
 import numpy as np
 from ragone import RagoneSimulation, RagonePlot, get_parameter_values, get_var_pts
+from matplotlib import colormaps
 
 model = pybamm.lithium_ion.DFN(options={"calculate discharge energy": "true"})
 
 parameter_values = get_parameter_values(ageing=False)
+volume = parameter_values["Cell volume [m3]"] * 1000
+mass = 68.38e-3
+
 
 var_pts = get_var_pts()
 
-solver = pybamm.IDAKLUSolver(rtol=1e-8, atol=1e-10)
+solver = pybamm.IDAKLUSolver(rtol=1e-6, atol=1e-8)
 
 # Obtain discharged and charged solutions
 experiment_dch = pybamm.Experiment(
@@ -76,14 +80,27 @@ for mode, value_range in value_ranges.items():
         solutions.append(sol)
 
 
-plt = RagonePlot(solutions, labels=labels)
+plt = RagonePlot(solutions, labels=labels, volume=volume, mass=mass)
 fig, ax = plt.plot(show_plot=False)
 
-# Set axes manually to match other figures (current plots "overflow")
-# solution = solutions[1]
-# ax.set_xlim(solution.min_input, 80)
-# ax.set_ylim(0.1 * solution.max_output, 1.1 * solution.max_output)
+# Modify style to improve readability
+cmap = colormaps["plasma"]
+style_dict = {
+    "power - charge": {"color": cmap(0), "linestyle": "-"},
+    "power - discharge": {"color": cmap(0.6), "linestyle": "-"},
+    "current - charge": {"color": cmap(0), "linestyle": "--"},
+    "current - discharge": {"color": cmap(0.6), "linestyle": "--"},
+}
 
+for line in ax.get_lines():
+    label = line.get_label()
+    if label in style_dict:
+        line.set_color(style_dict[label]["color"])
+        line.set_linestyle(style_dict[label]["linestyle"])
+
+ax.legend(loc="lower left", fontsize=10)
+
+# Save figure
 fig.savefig(
     "./figures/" + "ragone_compare_modes_directions_loglog.png",
     dpi=300,
@@ -123,18 +140,19 @@ for mode, value_range in value_ranges.items():
 
         solutions.append(sol)
 
-plt = RagonePlot(solutions, labels=labels, scale="linear")
+plt = RagonePlot(solutions, labels=labels, scale="linear", volume=volume, mass=68.38e-3)
 fig, ax = plt.plot(show_plot=False)
 
-# # Set axes manually to match other figures (current plots "overflow")
-# solution = solutions[1]
-# ax.set_xlim(solution.min_input, 80)
-# ax.set_ylim(0.1 * solution.max_output, 1.1 * solution.max_output)
+# Modify style to improve readability
+for line in ax.get_lines():
+    label = line.get_label()
+    if label in style_dict:
+        line.set_color(style_dict[label]["color"])
+        line.set_linestyle(style_dict[label]["linestyle"])
 
-# ax.set_xscale("linear")
-# ax.set_yscale("linear")
-# ax.legend(loc="upper right")
+ax.legend(loc="upper right", fontsize=10)
 
+# Save figure
 fig.savefig(
     "./figures/" + "ragone_compare_modes_directions_linear.png",
     dpi=300,

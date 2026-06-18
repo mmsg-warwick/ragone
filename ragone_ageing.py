@@ -47,7 +47,6 @@ model = pybamm.lithium_ion.DFN(
     options=options,
 )
 parameter_values = get_parameter_values(ageing=False)
-volume = parameter_values["Cell volume [m3]"] * 1000
 solver = pybamm.IDAKLUSolver(
     rtol=1e-6,
     atol=1e-8,
@@ -81,12 +80,16 @@ ageing_solutions = [aged_sol.all_first_states[0]] + aged_sol.all_first_states[
 if scale == "loglog":
     value_ranges = {
         "power": np.logspace(np.log10(0.5), np.log10(100), 50),
+        # "power": np.array([1.8, 18, 27, 36, 54]),
         "current": np.logspace(np.log10(0.1), np.log10(30), 50),
+        # "current": np.array([0.5, 5, 7.5, 10, 15]),
     }
 elif scale == "linear":
     value_ranges = {
         "power": np.linspace(0.5, 100, 50),
+        # "power": np.array([1.8, 18, 27, 36, 54]),
         "current": np.linspace(0.1, 30, 50),
+        # "current": np.array([0.5, 5, 7.5, 10, 15]),
     }
 
 for mode, value_range in value_ranges.items():
@@ -106,7 +109,7 @@ for mode, value_range in value_ranges.items():
 
         sol = sim.solve()
 
-        my_plt = RagonePlot(sol, labels=None, volume=volume, scale=scale, fit=True)
+        my_plt = RagonePlot(sol, labels=None, scale=scale, fit=True)
         fig, ax = my_plt.plot(show_plot=False)
 
         ax.annotate(
@@ -124,14 +127,16 @@ for mode, value_range in value_ranges.items():
             Path("figures")
             / "fits"
             / f"ragone_ageing_fit_{mode}{tag}_{scale}_cycle_{step * i}.png",
+            # / f"ragone_ageing_fit_{mode}{tag}_{scale}_cycle_{step * i}_coarse.png",
             dpi=300,
         )
 
         solutions.append(sol)
 
-    plts = RagonePlot(solutions, labels=labels, volume=volume, scale=scale)
+    plts = RagonePlot(solutions, labels=labels, scale=scale)
     fig, _ = plts.plot(show_plot=False)
     fig.savefig(Path("figures") / f"ragone_ageing_{mode}{tag}_{scale}.png", dpi=300)
+    # fig.savefig(Path("figures") / f"ragone_ageing_{mode}{tag}_{scale}_coarse.png", dpi=300)
 
     if mode == "power":
         metrics = {"Cycle number": []}
@@ -146,5 +151,7 @@ for mode, value_range in value_ranges.items():
 
         metrics_df = pd.DataFrame(metrics)
         metrics_df.to_csv(
-            Path("data") / f"ragone_ageing_metrics_{scale}{tag}.csv", index=False
+            Path("data") / f"ragone_ageing_metrics_{scale}{tag}.csv",
+            index=False,
+            # Path("data") / f"ragone_ageing_metrics_{scale}{tag}_coarse.csv", index=False
         )

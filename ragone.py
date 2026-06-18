@@ -11,6 +11,7 @@ def get_options(SEI=False, plating=False, lam=False):
     if SEI:
         tag += "_SEI"
         options["SEI"] = "reaction limited"
+        # options["SEI"] = "ec reaction limited"
         options["SEI porosity change"] = "true"
     if plating:
         tag += "_plating"
@@ -42,16 +43,19 @@ def get_parameter_values(ageing=True):
 
     if ageing:
         parameter_values["SEI reaction exchange current density [A.m-2]"] = (
-            1.5e-7 * 0.15 * 2
-        )  # was *2
-        parameter_values["Lithium plating kinetic rate constant [m.s-1]"] = (
-            5e-12 * 1
-        )  # was *2
+            3.6e-8  # was 3.375e-8
+        )
+        # 3.5e-8 worked
+        parameter_values["SEI kinetic rate constant [m.s-1]"] = 5e-8
+        parameter_values["EC diffusivity [m2.s-1]"] = 1e-20
+        parameter_values["Lithium plating kinetic rate constant [m.s-1]"] = 4e-12 * 0.8
+        parameter_values["Exchange-current density for plating [A.m-2]"] = 8e-4
+        # overrides kinetic rate
         parameter_values["Negative electrode LAM constant proportional term [s-1]"] = (
-            2.7778e-07 * 2
+            6.9e-07
         )
         parameter_values["Positive electrode LAM constant proportional term [s-1]"] = (
-            2.7778e-07 * 2
+            6.9e-07
         )
         parameter_values["Negative electrode LAM constant exponential term"] = 1.3
         parameter_values["Positive electrode LAM constant exponential term"] = 1.3
@@ -68,11 +72,14 @@ def get_parameter_values(ageing=True):
 
 def get_var_pts():
     var_pts = {
-        "x_n": 50,
+        # "x_n": 50,
+        "x_n": 100,
         "x_s": 30,
         "x_p": 50,
-        "r_n": 20,
-        "r_p": 20,
+        # "r_n": 20,
+        # "r_p": 20,
+        "r_n": 30,
+        "r_p": 30,
     }
     return var_pts
 
@@ -88,11 +95,6 @@ class RagoneSolution:
         elif self.mode == "current":
             self.input = "Current [A]"
             self.output = "Capacity [A.h]"
-
-        self.min_input = np.nanmin(self.data[self.input])
-        self.max_input = np.nanmax(self.data[self.input])
-        self.min_output = np.nanmin(self.data[self.output])
-        self.max_output = np.nanmax(self.data[self.output])
 
         self._raw_metrics = None
         self._metrics = None
@@ -118,7 +120,11 @@ class RagoneSolution:
         log_output = np.log10(self.data[self.output])
 
         popt, _ = curve_fit(
-            self._gaussian_log, log_input, log_output, bounds=(0, np.inf)
+            self._gaussian_log,
+            log_input,
+            log_output,
+            bounds=(0, np.inf),
+            nan_policy="omit",
         )
 
         self._raw_metrics = popt
@@ -129,14 +135,14 @@ class RagoneSolution:
         }
         return popt
 
-    def fit_gaussian(self):
-        popt, _ = curve_fit(
-            self._gaussian,
-            self.data[self.input],
-            self.data[self.output],
-            bounds=(0, np.inf),
-        )
-        return popt
+    # def fit_gaussian(self):
+    #     popt, _ = curve_fit(
+    #         self._gaussian,
+    #         self.data[self.input],
+    #         self.data[self.output],
+    #         bounds=(0, np.inf),
+    #     )
+    #     return popt
 
     def fit(self):
         if self.scale == "loglog":
@@ -148,7 +154,9 @@ class RagoneSolution:
             fit_input = self.data[self.input]
             fit_output = self.data[self.output]
 
-        popt, _ = curve_fit(fit_fun, fit_input, fit_output, bounds=(0, np.inf))
+        popt, _ = curve_fit(
+            fit_fun, fit_input, fit_output, bounds=(0, np.inf), nan_policy="omit"
+        )
 
         self._raw_metrics = popt
         self.metrics = {
@@ -159,88 +167,72 @@ class RagoneSolution:
         }
         return popt
 
-    def plot_log(self):
-        print(self.metrics)
-        self.plot_fit()
+    # def plot_log(self):
+    #     print(self.metrics)
+    #     self.plot_fit()
 
-    def plot_gaussian(self, show_plot=True):
-        popt = self.fit_gaussian()
-        print(popt)
+    # def plot_gaussian(self, show_plot=True):
+    #     popt = self.fit_gaussian()
+    #     print(popt)
 
-        fig, ax = plt.subplots(figsize=(8, 6))
-        ax.loglog(self.data[self.input], self.data[self.output], "kx")
-        ax.loglog(
-            self.data[self.input],
-            self._gaussian(
-                self.data[self.input],
-                popt[0],
-                popt[1],
-                popt[2],
-            ),
-        )
-        ax.set_xlabel(self.input)
-        ax.set_ylabel(self.output)
-        ax.axhline(popt[0], color="lightgray", linestyle="--", label="E0")
-        ax.axvline(popt[1], color="lightgray", linestyle="--", label="P0")
-        ax.annotate(
-            f"E0 = {popt[0]:.2f},\n P0 = {popt[1]:.2f},\n n = {popt[2]:.2f}",
-            xy=(0.05, 0.05),
-            xycoords="axes fraction",
-        )
+    #     fig, ax = plt.subplots(figsize=(8, 6))
+    #     ax.loglog(self.data[self.input], self.data[self.output], "kx")
+    #     ax.loglog(
+    #         self.data[self.input],
+    #         self._gaussian(
+    #             self.data[self.input],
+    #             popt[0],
+    #             popt[1],
+    #             popt[2],
+    #         ),
+    #     )
+    #     ax.set_xlabel(self.input)
+    #     ax.set_ylabel(self.output)
+    #     ax.axhline(popt[0], color="lightgray", linestyle="--", label="E0")
+    #     ax.axvline(popt[1], color="lightgray", linestyle="--", label="P0")
+    #     ax.annotate(
+    #         f"E0 = {popt[0]:.2f},\n P0 = {popt[1]:.2f},\n n = {popt[2]:.2f}",
+    #         xy=(0.05, 0.05),
+    #         xycoords="axes fraction",
+    #     )
 
-        if show_plot:
-            plt.show()
+    #     if show_plot:
+    #         plt.show()
 
-        return fig, ax
+    #     return fig, ax
 
-    def plot_fit(self, show_plot=True):
-        if self._raw_metrics is None:
-            self.fit_log()
-
-        fig, ax = plt.subplots(figsize=(8, 6))
-        ax.loglog(self.data[self.input], self.data[self.output], "kx")
-        ax.loglog(
-            self.data[self.input],
-            self._gaussian(
-                self.data[self.input],
-                np.exp(self._raw_metrics[0]),
-                self._raw_metrics[1],
-                self._raw_metrics[2],
-            ),
-        )
-        ax.annotate(
-            f"E0 = {np.exp(self._raw_metrics[0]):.2f},\n P0 = {self._raw_metrics[1]:.2f},\n n = {self._raw_metrics[2]:.2f}",
-            xy=(0.05, 0.05),
-            xycoords="axes fraction",
-        )
-
-        ax.set_xlabel(self.input)
-        ax.set_ylabel(self.output)
-        ax.axhline(
-            np.exp(self._raw_metrics[0]), color="lightgray", linestyle="--", label="E0"
-        )
-        ax.axvline(self._raw_metrics[1], color="lightgray", linestyle="--", label="P0")
-
-        if show_plot:
-            plt.show()
-
-        return fig, ax
-
-    # @property
-    # def raw_metrics(self):
+    # def plot_fit(self, show_plot=True):
     #     if self._raw_metrics is None:
     #         self.fit_log()
-    #     return self._raw_metrics
 
-    # @property
-    # def metrics(self):
-    #     if self._metrics is None:
-    #         self.fit_log()
-    #     return self._metrics
+    #     fig, ax = plt.subplots(figsize=(8, 6))
+    #     ax.loglog(self.data[self.input], self.data[self.output], "kx")
+    #     ax.loglog(
+    #         self.data[self.input],
+    #         self._gaussian(
+    #             self.data[self.input],
+    #             np.exp(self._raw_metrics[0]),
+    #             self._raw_metrics[1],
+    #             self._raw_metrics[2],
+    #         ),
+    #     )
+    #     ax.annotate(
+    #         f"E0 = {np.exp(self._raw_metrics[0]):.2f},\n P0 = {self._raw_metrics[1]:.2f},\n n = {self._raw_metrics[2]:.2f}",
+    #         xy=(0.05, 0.05),
+    #         xycoords="axes fraction",
+    #     )
 
-    # @metrics.setter
-    # def metrics(self, value):
-    #     self._metrics = value
+    #     ax.set_xlabel(self.input)
+    #     ax.set_ylabel(self.output)
+    #     ax.axhline(
+    #         np.exp(self._raw_metrics[0]), color="lightgray", linestyle="--", label="E0"
+    #     )
+    #     ax.axvline(self._raw_metrics[1], color="lightgray", linestyle="--", label="P0")
+
+    #     if show_plot:
+    #         plt.show()
+
+    #     return fig, ax
 
 
 class RagonePlot:
@@ -256,14 +248,15 @@ class RagonePlot:
     ):
         self.solutions = solutions if isinstance(solutions, list) else [solutions]
 
-        # TODO: fix for multiple modes
         modes = {sol.mode for sol in self.solutions}
         if len(modes) == 1:
             self.mode = self.solutions[0].mode
             self.input = self.solutions[0].input
             self.output = self.solutions[0].output
         if len(modes) > 1:
-            self.mode = "power"
+            self.mode = (
+                "power"  # plot power by default, TODO: allow to plot current instead
+            )
             self.input = "Power [W]"
             self.output = "Energy [W.h]"
             for sol in self.solutions:
@@ -287,22 +280,25 @@ class RagonePlot:
         self.scale = scale
         self.fit = fit
 
-        if volume and mass:
-            raise ValueError("Only one of volume or mass can be provided")
-
         self.volume = volume
         self.mass = mass
-        self.scaling = volume or mass
-        self.scaling_unit = "l" if volume else "kg" if mass else None
 
         cmap = colormaps[colormap]
         self.colors = cmap(np.linspace(0, 0.9, len(self.solutions)))
 
     def _compute_data_limits(self):
-        self.min_input = min([sol.min_input for sol in self.solutions])
-        self.max_input = max([sol.max_input for sol in self.solutions])
-        self.min_output = min([sol.min_output for sol in self.solutions])
-        self.max_output = max([sol.max_output for sol in self.solutions])
+        self.min_input = min(
+            [np.nanmin(sol.data[self.input]) for sol in self.solutions]
+        )
+        self.max_input = max(
+            [np.nanmax(sol.data[self.input]) for sol in self.solutions]
+        )
+        self.min_output = min(
+            [np.nanmin(sol.data[self.output]) for sol in self.solutions]
+        )
+        self.max_output = max(
+            [np.nanmax(sol.data[self.output]) for sol in self.solutions]
+        )
 
     def _get_ticks_range(self, tick_min, tick_max):
         decades = np.floor(np.log10(tick_min)), np.ceil(np.log10(tick_max))
@@ -324,11 +320,10 @@ class RagonePlot:
         return labels
 
     def _set_axes_limits(self):
-        y_min = max([self.min_output, 0.1 * self.max_output])
+        self.y_min = max([self.min_output, 0.1 * self.max_output])
         if self.scale == "loglog":
-            y_min = max([self.min_output, 0.1 * self.max_output])
             self.ax.set_xlim([self.min_input, self.max_input])
-            self.ax.set_ylim([y_min, 1.1 * self.max_output])
+            self.ax.set_ylim([self.y_min, 1.1 * self.max_output])
         elif self.scale == "linear":
             self.ax.set_xlim([0, self.max_input])
             self.ax.set_ylim([0, 1.1 * self.max_output])
@@ -379,7 +374,9 @@ class RagonePlot:
 
         y_lim = self.ax.get_ylim()
         v_post = 0.5
-        x0 = y_lim[0] * (y_lim[1] / y_lim[0]) ** v_post  # weighted average in log scale
+        x0 = (
+            self.y_min * (y_lim[1] / self.y_min) ** v_post
+        )  # weighted average in log scale
         t0 = 1  # isochrone that we place at location x0
         label_hshift = 0.9  # shift so label doesn't overlap with line
 
@@ -398,15 +395,24 @@ class RagonePlot:
                 fontsize=8,
             )
 
-    def _set_secondary_axes(self):
+    def _set_secondary_axes(self, scaling, shift=None, fontsize=None):
+        fontsize = fontsize or plt.rcParams["font.size"]
+        x_position = shift or "top"
+        y_position = shift or "right"
+
+        if scaling == "volume":
+            scaling_factor = self.volume
+        elif scaling == "mass":
+            scaling_factor = self.mass
+
         def ext2int(x):
-            return x / self.scaling
+            return x / scaling_factor
 
         def int2ext(x):
-            return x * self.scaling
+            return x * scaling_factor
 
-        secx = self.ax.secondary_xaxis("top", functions=(ext2int, int2ext))
-        secy = self.ax.secondary_yaxis("right", functions=(ext2int, int2ext))
+        secx = self.ax.secondary_xaxis(x_position, functions=(ext2int, int2ext))
+        secy = self.ax.secondary_yaxis(y_position, functions=(ext2int, int2ext))
 
         # Set ticks for secondary axes (loglog only)
         if self.scale == "loglog":
@@ -414,27 +420,56 @@ class RagonePlot:
             ylim = self.ax.get_ylim()
             x_ticks = self._get_ticks_range(ext2int(xlim[0]), ext2int(xlim[1]))
             y_ticks = self._get_ticks_range(ext2int(ylim[0]), ext2int(ylim[1]))
-            secx.set_xticks(x_ticks)
-            secx.set_xticklabels(self._format_tick_labels(x_ticks))
-            secy.set_yticks(y_ticks)
-            secy.set_yticklabels(self._format_tick_labels(y_ticks))
-            # secx.xaxis.set_major_formatter(ticker.ScalarFormatter())
-            # secy.yaxis.set_major_formatter(ticker.ScalarFormatter())
+
+            # # X secondary axis
+            # secx.xaxis.set_major_locator(FixedLocator(x_ticks))
+            # secx.xaxis.set_major_formatter(
+            #     FixedFormatter(self._format_tick_labels(x_ticks))
+            # )
+            # secx.minorticks_off()
+
+            # # Y secondary axis
+            # secy.yaxis.set_major_locator(FixedLocator(y_ticks))
+            # secy.yaxis.set_major_formatter(
+            #     FixedFormatter(self._format_tick_labels(y_ticks))
+            # )
+            # secy.minorticks_off()
+
+            secx.set_xticks(x_ticks, labels=self._format_tick_labels(x_ticks))
+            # secx.set_xticklabels(self._format_tick_labels(x_ticks), fontsize=fontsize)
             secx.minorticks_off()
+
+            secy.set_yticks(y_ticks, labels=self._format_tick_labels(y_ticks))
+            # secy.set_yticklabels(self._format_tick_labels(y_ticks), fontsize=fontsize)
             secy.minorticks_off()
 
-        def convert_labels(label):
-            split_label = label.split("]")[0]
-            split_label = split_label[0].lower() + split_label[1:]
-            new_label = "Specific " + split_label + "." + self.scaling_unit + "$^{-1}$]"
-            return new_label
+        def convert_labels(label, scaling):
+            if "Energy" in label:
+                quantity = "Energy"
+                unit = "W.h"
+            elif "Capacity" in label:
+                quantity = "Capacity"
+                unit = "A.h"
+            elif "Power" in label:
+                quantity = "Power"
+                unit = "W"
+            elif "Current" in label:
+                quantity = "Current"
+                unit = "A"
 
-        secx.set_xlabel(convert_labels(self.input))
-        secy.set_ylabel(convert_labels(self.output))
+            if scaling == "volume":
+                return f"{quantity} density [{unit}.l$^{{-1}}$]"
+            elif scaling == "mass":
+                return f"Specific {quantity.lower()} [{unit}.kg$^{{-1}}$]"
+
+        secx.tick_params(axis="x", labelsize=fontsize)
+        secy.tick_params(axis="y", labelsize=fontsize)
+        secx.set_xlabel(convert_labels(self.input, scaling), fontsize=fontsize)
+        secy.set_ylabel(convert_labels(self.output, scaling), fontsize=fontsize)
 
     def plot(self, show_plot=True):
         plt.rcParams.update({"font.size": 14})
-        self.fig, self.ax = plt.subplots()
+        self.fig, self.ax = plt.subplots(constrained_layout=True)
         skip_legend = False
 
         if self.labels is None:
@@ -491,15 +526,27 @@ class RagonePlot:
         self._set_axes_ticks()
 
         # Produce secondary axes
-        if self.scaling:
-            self._set_secondary_axes()
+        if self.volume and self.mass:
+            self._set_secondary_axes(scaling="volume", fontsize=10)
+            self._set_secondary_axes(scaling="mass", shift=1.15, fontsize=10)
+
+            # secondary_axes = [ax for ax in self.fig.axes if ax is not self.ax]
+
+            # for secax in secondary_axes:
+            #     for label in secax.get_xticklabels() + secax.get_yticklabels():
+            #         label.set_fontsize(10)
+
+        elif self.volume:
+            self._set_secondary_axes(scaling="volume")
+        elif self.mass:
+            self._set_secondary_axes(scaling="mass")
 
         if not skip_legend:
             if self.scale == "loglog":
-                self.ax.legend(loc="lower left")
+                self.ax.legend(loc="lower left", fontsize=10)
             elif self.scale == "linear":
-                self.ax.legend(loc="upper right")
-        self.fig.tight_layout()
+                self.ax.legend(loc="upper right", fontsize=10)
+        # self.fig.tight_layout()
 
         # annotate isochrones (in the end to get the right transformation)
         self._annotate_isochrones()

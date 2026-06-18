@@ -46,8 +46,6 @@ parameter_values.update(
 )
 parameter_values["Negative electrode exchange-current density [A.m-2]"] = j_n0
 
-volume = parameter_values["Cell volume [m3]"] * 1000
-
 var_pts = {
     "x_n": 50,
     "x_s": 20,
@@ -122,7 +120,7 @@ for mode, value_range in value_ranges.items():
 
             # gc.collect()
 
-        plt = RagonePlot(solutions, labels=labels, volume=volume)
+        plt = RagonePlot(solutions, labels=labels)
         fig, _ = plt.plot(show_plot=False)
         fig.savefig(
             "./figures/" + f"ragone_{filename_extension[parameter_name]}_{mode}.png",

@@ -50,12 +50,12 @@ solver = pybamm.IDAKLUSolver(
     output_variables=output_variables,
     rtol=1e-6,
     atol=1e-8,
-    # options={
-    #     "max_error_test_failures": 200,
-    #     "max_convergence_failures": 10000,
-    #     "max_nonlinear_iterations": 400,
-    #     "dt_min": 1e-9,
-    # },
+    options={
+        "max_error_test_failures": 200,
+        "max_convergence_failures": 10000,
+        "max_nonlinear_iterations": 400,
+        # "dt_min": 1e-9,
+    },
 )
 
 # N_cycles = 1000

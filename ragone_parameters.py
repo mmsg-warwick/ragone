@@ -9,6 +9,7 @@ from ragone import (
 )
 from pathlib import Path
 import matplotlib.pyplot as plt
+from matplotlib import colormaps
 
 plt.rcParams.update({"font.size": 14})
 
@@ -19,8 +20,6 @@ model = pybamm.lithium_ion.DFN(
 )
 
 parameter_values = get_parameter_values(ageing=False)
-
-volume = parameter_values["Cell volume [m3]"] * 1000
 
 aged_sol = pybamm.load(Path("data") / f"aged_solution{tag}.pkl")
 
@@ -54,18 +53,25 @@ for label in filename_extension.keys():
     parameter_sweeps[label] = values
 
 # Make plots of parameter evolution
-fig, ax = plt.subplots()
-for label, values in parameter_sweeps.items():
-    ax.plot(cycles, values, label=label)
+cmap = colormaps["plasma"]
+colors = cmap(np.linspace(0, 0.9, 4))
+fig, ax = plt.subplots(constrained_layout=True)
+for label, values, color in zip(
+    parameter_sweeps.keys(), parameter_sweeps.values(), colors
+):
+    ax.plot(cycles, values, label=label, color=color)
 
 ax.set_xlabel("Cycle number")
+ax.set_ylabel("Porosity/AMVF [-]")
 ax.set_ylim(0, 1)
 ax.legend(
-    ["Neg. porosity", "Neg. AMVF", "Pos. porosity", "Pos. AMVF"], loc="upper right"
+    ["Negative porosity", "Negative AMVF", "Positive porosity", "Positive AMVF"],
+    loc="upper right",
+    fontsize=10,
 )
 fig.savefig(Path("figures") / "aged_solution_evolution_vf.png", dpi=300)
 
-solver = pybamm.IDAKLUSolver(rtol=1e-8, atol=1e-10)
+solver = pybamm.IDAKLUSolver(rtol=1e-6, atol=1e-8)
 
 value_ranges = {
     "power": np.logspace(np.log10(0.5), np.log10(100), 50),
@@ -95,7 +101,7 @@ for mode, value_range in value_ranges.items():
 
             solutions.append(sol)
 
-        plt = RagonePlot(solutions, labels=labels, volume=volume, scale="loglog")
+        plt = RagonePlot(solutions, labels=labels, scale="loglog")
         fig, _ = plt.plot(show_plot=False)
         fig.savefig(
             Path("figures")
@@ -132,7 +138,7 @@ for mode, value_range in value_ranges.items():
 
             solutions.append(sol)
 
-        plt = RagonePlot(solutions, labels=labels, volume=volume, scale="linear")
+        plt = RagonePlot(solutions, labels=labels, scale="linear")
         fig, _ = plt.plot(show_plot=False)
         fig.savefig(
             Path("figures")

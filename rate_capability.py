@@ -1,5 +1,7 @@
 import pybamm
 import matplotlib.pyplot as plt
+from matplotlib import colormaps
+import numpy as np
 from ragone import RagoneSimulation, get_options, get_parameter_values, get_var_pts
 from pathlib import Path
 import argparse
@@ -30,12 +32,20 @@ model = pybamm.lithium_ion.DFN(
 
 parameter_values = get_parameter_values(ageing=False)
 
-
-volume = parameter_values["Cell volume [m3]"] * 1000
-
 aged_sol = pybamm.load(Path("data") / f"aged_solution{tag}.pkl")
 
 var_pts = get_var_pts()
+
+solver = pybamm.IDAKLUSolver(
+    rtol=1e-6,
+    atol=1e-8,
+    options={
+        "max_error_test_failures": 200,
+        "max_convergence_failures": 20000,
+        "max_nonlinear_iterations": 400,
+        # "dt_min": 1e-9,
+    },
+)
 
 step = 25
 cycles = [1] + list(range(step - 1, len(aged_sol.all_first_states), step))
@@ -43,14 +53,17 @@ cycles = [1] + list(range(step - 1, len(aged_sol.all_first_states), step))
 ageing_solutions = [aged_sol.all_first_states[i] for i in cycles]
 
 value_ranges = {
-    "power": [1, 10, 20, 25, 30, 35, 40, 45, 50, 55, 60],
-    "current": [5, 10, 12.5, 15, 17.5, 20],
+    "power": [2, 10, 18, 26, 34, 42, 50],
+    # "power": [2, 6, 10, 14, 18],
+    # "current": [0.5, 1.25, 2.5, 3.75, 5],
 }
 
 for mode, value_range in value_ranges.items():
-    fig, ax = plt.subplots()
+    cmap = colormaps["plasma"]
+    colors = cmap(np.linspace(0, 0.9, len(value_range)))
+    fig, ax = plt.subplots(constrained_layout=True)
     data = {}
-    for value in value_range:
+    for value, color in zip(value_range, colors):
         print(f"Running Ragone plots for {mode} {value}...")
         solutions = []
         for i, first_state in enumerate(ageing_solutions):
@@ -62,7 +75,7 @@ for mode, value_range in value_ranges.items():
                 new_model,
                 parameter_values=parameter_values,
                 value_range=[value],
-                solver=pybamm.IDAKLUSolver(rtol=1e-8, atol=1e-10),
+                solver=solver,
                 # solver=pybamm.IDAKLUSolver(),
                 mode=mode,
                 var_pts=var_pts,
@@ -74,12 +87,12 @@ for mode, value_range in value_ranges.items():
 
         units = "W" if mode == "power" else "A"
         data[value] = solutions
-        ax.plot(cycles, solutions, label=f"{value} {units}")
+        ax.plot(cycles, solutions, label=f"{value} {units}", color=color)
 
     ax.set_xlabel("Cycle number")
     ax.set_ylabel(sol.output)
     ymax = 20 if mode == "power" else 5
     ax.set_ylim(0, ymax * 1.1)
-    ax.legend()
+    ax.legend(fontsize=10)
     fig.savefig(Path("figures") / f"rate_capability_{mode}{tag}.png", dpi=300)
     print("Saved figure for mode:", mode)

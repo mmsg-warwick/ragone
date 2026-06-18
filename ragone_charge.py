@@ -15,8 +15,6 @@ parameter_values["Negative electrode OCP [V]"] = Chen2020["Negative electrode OC
 parameter_values["Electrolyte diffusivity [m2.s-1]"] = 1.7694e-10
 parameter_values["Electrolyte conductivity [S.m-1]"] = 0.9487
 
-volume = parameter_values["Cell volume [m3]"] * 1000
-
 solver = pybamm.IDAKLUSolver()
 
 var_pts = {
