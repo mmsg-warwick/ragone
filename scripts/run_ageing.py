@@ -1,6 +1,5 @@
 import pybamm
-from ragone import get_options, get_parameter_values, get_var_pts
-from os import path
+from ragone import get_options, get_parameter_values, get_var_pts, ROOT
 import argparse
 
 parser = argparse.ArgumentParser(description="Run battery ageing simulation.")
@@ -98,5 +97,5 @@ for k in list(model.rhs.keys()) + list(model.algebraic.keys()):
     symbol = sol.all_first_states[2][k.name]
     print(f"{k.name}: ", symbol)
 
-sol.save(path.join("data", f"aged_solution{tag}.pkl"))
+sol.save(ROOT / "data" / f"aged_solution{tag}.pkl")
 # sol.save(path.join("data", f"aged_solution_fast{tag}.pkl"))
