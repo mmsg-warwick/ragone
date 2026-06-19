@@ -110,38 +110,38 @@ for mode, value_range in value_ranges.items():
         )
 
 # Now rerun for linear scale
-value_ranges = {
-    "power": np.linspace(0.5, 100, 50),
-    "current": np.linspace(0.1, 30, 50),
-}
+# value_ranges = {
+#     "power": np.linspace(0.5, 100, 50),
+#     "current": np.linspace(0.1, 30, 50),
+# }
 
-for mode, value_range in value_ranges.items():
-    print(f"Starting Ragone plots - {mode} mode")
-    for parameter_name, parameter_range in parameter_sweeps.items():
-        solutions = []
-        edited_parameter_values = get_parameter_values(ageing=False)
+# for mode, value_range in value_ranges.items():
+#     print(f"Starting Ragone plots - {mode} mode")
+#     for parameter_name, parameter_range in parameter_sweeps.items():
+#         solutions = []
+#         edited_parameter_values = get_parameter_values(ageing=False)
 
-        print(f"Running Ragone plot for parameter: {parameter_name}")
-        for i, parameter_value in enumerate(parameter_range):
-            print(f"Running Ragone plot for solution {i + 1} of {len(parameter_range)}")
-            edited_parameter_values[parameter_name] = parameter_value
-            sim = RagoneSimulation(
-                model,
-                parameter_values=edited_parameter_values,
-                value_range=value_range,
-                var_pts=var_pts,
-                solver=solver,
-                mode=mode,
-            )
+#         print(f"Running Ragone plot for parameter: {parameter_name}")
+#         for i, parameter_value in enumerate(parameter_range):
+#             print(f"Running Ragone plot for solution {i + 1} of {len(parameter_range)}")
+#             edited_parameter_values[parameter_name] = parameter_value
+#             sim = RagoneSimulation(
+#                 model,
+#                 parameter_values=edited_parameter_values,
+#                 value_range=value_range,
+#                 var_pts=var_pts,
+#                 solver=solver,
+#                 mode=mode,
+#             )
 
-            sol = sim.solve()
+#             sol = sim.solve()
 
-            solutions.append(sol)
+#             solutions.append(sol)
 
-        plt = RagonePlot(solutions, labels=labels, scale="linear")
-        fig, _ = plt.plot(show_plot=False)
-        fig.savefig(
-            Path("figures")
-            / f"ragone_parameters_{mode}_{filename_extension[parameter_name]}_linear.png",
-            dpi=300,
-        )
+#         plt = RagonePlot(solutions, labels=labels, scale="linear")
+#         fig, _ = plt.plot(show_plot=False)
+#         fig.savefig(
+#             Path("figures")
+#             / f"ragone_parameters_{mode}_{filename_extension[parameter_name]}_linear.png",
+#             dpi=300,
+#         )
