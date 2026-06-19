@@ -1,9 +1,8 @@
 # Ragone plots
 
 [![Tests](https://github.com/mmsg-warwick/ragone/actions/workflows/tests.yml/badge.svg)](https://github.com/mmsg-warwick/ragone/actions/workflows/tests.yml)
-
 [![codecov](https://codecov.io/gh/mmsg-warwick/ragone/graph/badge.svg?token=uk6ryEFTRn)](https://codecov.io/gh/mmsg-warwick/ragone)
-
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.20762920.svg)](https://doi.org/10.5281/zenodo.20762920)
 
 This repository contains the code to generate Ragone plots and reproduce the results of the article:
 
@@ -24,6 +23,18 @@ To also install the optional test dependencies:
 ```bash
 pip install -e ".[test]"
 ```
+
+## Reproducing the results
+
+In order to reproduce the results of the article, you need to run the scripts in the `scripts/` folder. The scripts are designed to be run in a specific order, and they will produce the data files and figures needed for the article:
+
+1. Run `run_ageing.py` to produce the .pkl files in the `data/` folder. These files contain the solutions of the ageing simulations, which are needed to extract the Ragone curves at different states of health.
+2. You can now simultaneosly run:
+    - `ragone_ageing.py` to produce the Ragone plots for a specific simulation at different cycle numbers (i.e. different states of health). This wil also compute the metrics that will be saved as .csv files in the `data/` folder, which are needed to run `plot_power_energy_fade.py`.
+    - `ragone_compare.py` to produce the Ragone plots for all the combinations of cycling mode (power or current) and direction (charge or discharge).
+    - `ragone_parameters.py` to produce the Ragone plots showing the effect of a single parameter.
+    - `rpt.py` to produce the reference performance test plots.
+3. Run `plot_power_energy_fade.py` to produce the plots showing the normalised energy and power fade vs cycle number, comparing slow and fast charging.
 
 ## Repository structure
 
