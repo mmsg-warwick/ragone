@@ -171,3 +171,28 @@ class TestRagonePlotPlot:
         # Default (labels=None) → skip_legend=True → no legend drawn
         _, ax = power_plot.plot(show_plot=False)
         assert ax.get_legend() is None
+
+    @pytest.mark.unit
+    def test_linear_scale_with_labels_creates_legend(self, power_solution):
+        # Covers the `elif self.scale == "linear"` legend branch (line 315-316)
+        fig, ax = RagonePlot(power_solution, scale="linear", labels=["Series A"]).plot(
+            show_plot=False
+        )
+        assert ax.get_legend() is not None
+
+    @pytest.mark.unit
+    def test_both_volume_and_mass_produces_secondary_axes(self, power_solution):
+        # Covers the `if self.volume and self.mass` branch (lines 298-299)
+        fig, ax = RagonePlot(power_solution, volume=0.01, mass=0.05).plot(
+            show_plot=False
+        )
+        assert isinstance(fig, matplotlib.figure.Figure)
+        assert len(ax.child_axes) >= 2
+
+    @pytest.mark.unit
+    def test_current_solution_with_volume_secondary_axes(self, current_solution):
+        # Covers convert_labels "Capacity" branch (lines 219-220) and
+        # "Current" branch (lines 224-226) inside _set_secondary_axes
+        fig, ax = RagonePlot(current_solution, volume=0.001).plot(show_plot=False)
+        assert isinstance(fig, matplotlib.figure.Figure)
+        assert len(ax.child_axes) >= 2

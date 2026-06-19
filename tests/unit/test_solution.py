@@ -171,3 +171,90 @@ class TestRagoneSolutionPlot:
         MockPlot.assert_called_once_with(
             power_solution, labels=["A"], volume=0.1, mass=0.2, scale="linear"
         )
+
+
+# ---------------------------------------------------------------------------
+# fit()  (requires setting solution.scale manually — not set by __init__)
+# ---------------------------------------------------------------------------
+
+# Synthetic data for the linear fit: _gaussian_linear(x, E0=10, P0=5, n=1)
+_P_LINEAR = np.array([1.0, 2.0, 3.0, 4.0, 5.0])
+_E_LINEAR = 10.0 * np.exp(-((_P_LINEAR / 5.0) ** 1.0))
+
+
+class TestRagoneSolutionFit:
+    @pytest.fixture
+    def loglog_solution(self):
+        data = {
+            "Power [W]": _P_FIT,
+            "Energy [W.h]": _E_FIT,
+            "Time [h]": _E_FIT / _P_FIT,
+        }
+        sol = RagoneSolution(data, "power")
+        sol.scale = "loglog"
+        return sol
+
+    @pytest.fixture
+    def linear_solution(self):
+        data = {
+            "Power [W]": _P_LINEAR,
+            "Energy [W.h]": _E_LINEAR,
+            "Time [h]": _E_LINEAR / _P_LINEAR,
+        }
+        sol = RagoneSolution(data, "power")
+        sol.scale = "linear"
+        return sol
+
+    @pytest.mark.unit
+    def test_fit_loglog_returns_three_params(self, loglog_solution):
+        popt = loglog_solution.fit()
+        assert len(popt) == 3
+
+    @pytest.mark.unit
+    def test_fit_loglog_sets_raw_metrics(self, loglog_solution):
+        popt = loglog_solution.fit()
+        np.testing.assert_array_equal(loglog_solution._raw_metrics, popt)
+
+    @pytest.mark.unit
+    def test_fit_loglog_metrics_has_fitting_scale_key(self, loglog_solution):
+        loglog_solution.fit()
+        assert loglog_solution.metrics["Fitting scale"] == "loglog"
+
+    @pytest.mark.unit
+    def test_fit_loglog_metrics_has_n_and_reference_keys(self, loglog_solution):
+        loglog_solution.fit()
+        assert "n" in loglog_solution.metrics
+        assert "Reference energy [W.h]" in loglog_solution.metrics
+        assert "Reference power [W]" in loglog_solution.metrics
+
+    @pytest.mark.unit
+    def test_fit_loglog_recovers_known_parameters(self, loglog_solution):
+        # Data generated with E0=1, P0=1, n=1
+        popt = loglog_solution.fit()
+        assert popt[0] == pytest.approx(1.0, rel=1e-3)
+        assert popt[1] == pytest.approx(1.0, rel=1e-3)
+        assert popt[2] == pytest.approx(1.0, rel=1e-3)
+
+    @pytest.mark.unit
+    def test_fit_linear_returns_three_params(self, linear_solution):
+        popt = linear_solution.fit()
+        assert len(popt) == 3
+
+    @pytest.mark.unit
+    def test_fit_linear_sets_raw_metrics(self, linear_solution):
+        popt = linear_solution.fit()
+        np.testing.assert_array_equal(linear_solution._raw_metrics, popt)
+
+    @pytest.mark.unit
+    def test_fit_linear_metrics_has_fitting_scale_key(self, linear_solution):
+        linear_solution.fit()
+        assert linear_solution.metrics["Fitting scale"] == "linear"
+
+    @pytest.mark.unit
+    def test_fit_linear_recovers_known_parameters(self, linear_solution):
+        # Data generated with E0=10, P0=5, n=1.
+        # _gaussian_linear returns E0 * exp(-((x/P0)^n)), so popt[0] == E0 directly.
+        popt = linear_solution.fit()
+        assert popt[0] == pytest.approx(10.0, rel=1e-3)
+        assert popt[1] == pytest.approx(5.0, rel=1e-3)
+        assert popt[2] == pytest.approx(1.0, rel=1e-3)
