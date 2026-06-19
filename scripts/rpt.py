@@ -58,8 +58,8 @@ cycles = [1] + list(range(step - 1, len(aged_sol.all_first_states), step))
 ageing_solutions = [aged_sol.all_first_states[i] for i in cycles]
 
 value_ranges = {
-    "power": [2, 10, 18, 26, 34, 42, 50],
-    # "power": [2, 6, 10, 14, 18],
+    # "power": [2, 10, 18, 26, 34, 42, 50],
+    "power": [2, 6, 10, 14, 18],
     # "current": [0.5, 1.25, 2.5, 3.75, 5],
 }
 
@@ -99,5 +99,5 @@ for mode, value_range in value_ranges.items():
     ymax = 20 if mode == "power" else 5
     ax.set_ylim(0, ymax * 1.1)
     ax.legend(fontsize=10)
-    fig.savefig(ROOT / "figures" / f"rate_capability_{mode}{tag}.png", dpi=300)
+    fig.savefig(ROOT / "figures" / f"rpt_{mode}{tag}.png", dpi=300)
     print("Saved figure for mode:", mode)
