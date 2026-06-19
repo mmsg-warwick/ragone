@@ -1,6 +1,6 @@
 import pybamm
 import numpy as np
-from ragone import RagoneSimulation, RagonePlot, get_parameter_values, get_var_pts
+from ragone import RagoneSimulation, RagonePlot, get_parameter_values, get_var_pts, ROOT
 from matplotlib import colormaps
 
 model = pybamm.lithium_ion.DFN(options={"calculate discharge energy": "true"})
@@ -102,7 +102,7 @@ ax.legend(loc="lower left", fontsize=10)
 
 # Save figure
 fig.savefig(
-    "./figures/" + "ragone_compare_modes_directions_loglog.png",
+    ROOT / "figures" / "ragone_compare_modes_directions_loglog.png",
     dpi=300,
 )
 
@@ -154,6 +154,6 @@ ax.legend(loc="upper right", fontsize=10)
 
 # Save figure
 fig.savefig(
-    "./figures/" + "ragone_compare_modes_directions_linear.png",
+    ROOT / "figures" / "ragone_compare_modes_directions_linear.png",
     dpi=300,
 )
