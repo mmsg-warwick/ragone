@@ -2,8 +2,13 @@ import pybamm
 import matplotlib.pyplot as plt
 from matplotlib import colormaps
 import numpy as np
-from ragone import RagoneSimulation, get_options, get_parameter_values, get_var_pts
-from pathlib import Path
+from ragone import (
+    RagoneSimulation,
+    ROOT,
+    get_options,
+    get_parameter_values,
+    get_var_pts,
+)
 import argparse
 
 plt.rcParams.update({"font.size": 14})
@@ -32,7 +37,7 @@ model = pybamm.lithium_ion.DFN(
 
 parameter_values = get_parameter_values(ageing=False)
 
-aged_sol = pybamm.load(Path("data") / f"aged_solution{tag}.pkl")
+aged_sol = pybamm.load(ROOT / "data" / f"aged_solution{tag}.pkl")
 
 var_pts = get_var_pts()
 
@@ -94,5 +99,5 @@ for mode, value_range in value_ranges.items():
     ymax = 20 if mode == "power" else 5
     ax.set_ylim(0, ymax * 1.1)
     ax.legend(fontsize=10)
-    fig.savefig(Path("figures") / f"rate_capability_{mode}{tag}.png", dpi=300)
+    fig.savefig(ROOT / "figures" / f"rate_capability_{mode}{tag}.png", dpi=300)
     print("Saved figure for mode:", mode)

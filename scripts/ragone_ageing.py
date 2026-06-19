@@ -4,11 +4,11 @@ import pandas as pd
 from ragone import (
     RagoneSimulation,
     RagonePlot,
+    ROOT,
     get_options,
     get_parameter_values,
     get_var_pts,
 )
-from pathlib import Path
 import argparse
 
 print("Processing command line arguments...")
@@ -59,7 +59,7 @@ solver = pybamm.IDAKLUSolver(
 )
 
 print("Loading aged solution...")
-aged_sol = pybamm.load(Path("data") / f"aged_solution{tag}.pkl")
+aged_sol = pybamm.load(ROOT / "data" / f"aged_solution{tag}.pkl")
 print("Aged solution loaded.")
 
 var_pts = get_var_pts()
@@ -124,7 +124,8 @@ for mode, value_range in value_ranges.items():
         ax.axvline(sol._raw_metrics[1], color="lightgray", linestyle="--", label="P_0")
 
         fig.savefig(
-            Path("figures")
+            ROOT
+            / "figures"
             / "fits"
             / f"ragone_ageing_fit_{mode}{tag}_{scale}_cycle_{step * i}.png",
             # / f"ragone_ageing_fit_{mode}{tag}_{scale}_cycle_{step * i}_coarse.png",
@@ -135,7 +136,7 @@ for mode, value_range in value_ranges.items():
 
     plts = RagonePlot(solutions, labels=labels, scale=scale)
     fig, _ = plts.plot(show_plot=False)
-    fig.savefig(Path("figures") / f"ragone_ageing_{mode}{tag}_{scale}.png", dpi=300)
+    fig.savefig(ROOT / "figures" / f"ragone_ageing_{mode}{tag}_{scale}.png", dpi=300)
     # fig.savefig(Path("figures") / f"ragone_ageing_{mode}{tag}_{scale}_coarse.png", dpi=300)
 
     if mode == "power":
@@ -151,7 +152,7 @@ for mode, value_range in value_ranges.items():
 
         metrics_df = pd.DataFrame(metrics)
         metrics_df.to_csv(
-            Path("data") / f"ragone_ageing_metrics_{scale}{tag}.csv",
+            ROOT / "data" / f"ragone_ageing_metrics_{scale}{tag}.csv",
             index=False,
             # Path("data") / f"ragone_ageing_metrics_{scale}{tag}_coarse.csv", index=False
         )
