@@ -25,3 +25,6 @@ slurm/
 # Ignore debug files
 debug*.py
 debug*.ipynb
+
+# Ignore agents files
+.github/agents/

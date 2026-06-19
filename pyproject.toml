@@ -14,9 +14,26 @@ dependencies = [
     "pandas",
 ]
 
+[project.optional-dependencies]
+test = ["pytest", "pytest-cov", "coverage[toml]"]
+
 [tool.setuptools.packages.find]
 where = ["."]
 include = ["ragone*"]
 
 [tool.ruff]
 line-length = 88
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+markers = [
+    "unit: fast, isolated unit tests",
+    "integration: slower end-to-end tests",
+]
+
+[tool.coverage.run]
+source = ["ragone"]
+omit = ["tests/*"]
+
+[tool.coverage.report]
+show_missing = true
