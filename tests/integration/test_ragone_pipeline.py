@@ -4,7 +4,7 @@ These tests exercise multiple real components working together:
   - RagoneSolution  <-> RagonePlot
   - RagoneSolution.fit_log() <-> RagonePlot(fit=True)
   - RagoneSimulation.solve() -> RagoneSolution -> RagonePlot
-  - config helpers <-> RagoneSimulation
+  - utils helpers <-> RagoneSimulation
 
 pybamm.Simulation is still mocked to keep the tests fast, but all ragone
 modules run for real so that cross-module contracts are verified.
@@ -408,23 +408,23 @@ class TestSimulationPipeline:
 
 
 # ---------------------------------------------------------------------------
-# Group 4: config helpers <-> RagoneSimulation
+# Group 4: utils helpers <-> RagoneSimulation
 # ---------------------------------------------------------------------------
 
 
 @pytest.mark.integration
-class TestConfigIntegration:
-    """Config helpers produce outputs that integrate with RagoneSimulation."""
+class TestUtilsIntegration:
+    """Utils helpers produce outputs that integrate with RagoneSimulation."""
 
     def test_get_options_no_degradation_returns_empty_dict_and_empty_tag(self):
-        from ragone.config import get_options
+        from ragone.utils import get_options
 
         options, tag = get_options()
         assert options == {}
         assert tag == ""
 
     def test_get_options_sei_only(self):
-        from ragone.config import get_options
+        from ragone.utils import get_options
 
         options, tag = get_options(SEI=True)
         assert "SEI" in options
@@ -432,7 +432,7 @@ class TestConfigIntegration:
         assert tag == "_SEI"
 
     def test_get_options_plating_only(self):
-        from ragone.config import get_options
+        from ragone.utils import get_options
 
         options, tag = get_options(plating=True)
         assert "lithium plating" in options
@@ -440,7 +440,7 @@ class TestConfigIntegration:
         assert tag == "_plating"
 
     def test_get_options_lam_only(self):
-        from ragone.config import get_options
+        from ragone.utils import get_options
 
         options, tag = get_options(lam=True)
         assert "particle mechanics" in options
@@ -448,13 +448,13 @@ class TestConfigIntegration:
         assert tag == "_lam"
 
     def test_get_options_all_mechanisms_tag_order(self):
-        from ragone.config import get_options
+        from ragone.utils import get_options
 
         _, tag = get_options(SEI=True, plating=True, lam=True)
         assert tag == "_SEI_plating_lam"
 
     def test_get_options_sei_lam_without_plating(self):
-        from ragone.config import get_options
+        from ragone.utils import get_options
 
         options, tag = get_options(SEI=True, lam=True)
         assert "SEI" in options
@@ -464,7 +464,7 @@ class TestConfigIntegration:
 
     def test_get_options_returns_dict_usable_by_ragone_simulation(self, mock_model):
         """Options dict from get_options() can be passed to RagoneSimulation."""
-        from ragone.config import get_options
+        from ragone.utils import get_options
 
         options, _ = get_options()
         # options is normally used for pybamm model construction, but the key
