@@ -1,6 +1,0 @@
-rules:
-  secrets-outside-env:
-    ignore:
-      # CODECOV_TOKEN is a non-deployment CI secret; a GitHub environment is not
-      # required or appropriate here.
-      - tests.yml
