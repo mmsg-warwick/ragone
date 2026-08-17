@@ -1,15 +1,17 @@
-import pybamm
+import argparse
+
 import numpy as np
 import pandas as pd
+import pybamm
+
 from ragone import (
-    RagoneSimulation,
-    RagonePlot,
     ROOT,
+    RagonePlot,
+    RagoneSimulation,
     get_options,
     get_parameter_values,
     get_var_pts,
 )
-import argparse
 
 print("Processing command line arguments...")
 parser = argparse.ArgumentParser(description="Run battery ageing simulation.")

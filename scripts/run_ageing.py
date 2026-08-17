@@ -1,6 +1,8 @@
-import pybamm
-from ragone import get_options, get_parameter_values, get_var_pts, ROOT
 import argparse
+
+import pybamm
+
+from ragone import ROOT, get_options, get_parameter_values, get_var_pts
 
 parser = argparse.ArgumentParser(description="Run battery ageing simulation.")
 parser.add_argument("--SEI", action="store_true", help="Enable SEI (default: disabled)")

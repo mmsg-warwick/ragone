@@ -1,11 +1,11 @@
 """Unit tests for RagoneSolution."""
 
-import numpy as np
-import pytest
 from unittest.mock import MagicMock, patch
 
-from ragone.solution import RagoneSolution
+import numpy as np
+import pytest
 
+from ragone.solution import RagoneSolution
 
 # ---------------------------------------------------------------------------
 # Synthetic data for fit_log

@@ -5,14 +5,14 @@ occur. Only the constructor (which calls pybamm.step.VoltageTermination) and
 the public API surface are exercised here.
 """
 
+from unittest.mock import MagicMock, patch
+
 import numpy as np
 import pybamm
 import pytest
-from unittest.mock import MagicMock, patch
 
 from ragone.simulation import RagoneSimulation
 from ragone.solution import RagoneSolution
-
 
 # ---------------------------------------------------------------------------
 # Helpers

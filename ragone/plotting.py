@@ -1,6 +1,6 @@
 import matplotlib.pyplot as plt
-from matplotlib import colormaps
 import numpy as np
+from matplotlib import colormaps
 
 
 class RagonePlot:

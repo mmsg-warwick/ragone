@@ -1,11 +1,11 @@
 import matplotlib
 
 matplotlib.use("Agg")
-import matplotlib.pyplot as plt
+from unittest.mock import MagicMock
 
+import matplotlib.pyplot as plt
 import numpy as np
 import pytest
-from unittest.mock import MagicMock
 
 # Minimal parameter values that satisfy RagoneSimulation.__init__
 # without needing a real pybamm.ParameterValues object.

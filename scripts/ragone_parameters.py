@@ -1,15 +1,17 @@
-import pybamm
+from pathlib import Path
+
+import matplotlib.pyplot as plt
 import numpy as np
+import pybamm
+from matplotlib import colormaps
+
 from ragone import (
-    RagoneSimulation,
     RagonePlot,
-    get_parameter_values,
+    RagoneSimulation,
     get_options,
+    get_parameter_values,
     get_var_pts,
 )
-from pathlib import Path
-import matplotlib.pyplot as plt
-from matplotlib import colormaps
 
 plt.rcParams.update({"font.size": 14})
 
@@ -44,7 +46,7 @@ filename_extension = {
 parameter_sweeps = {}
 
 print("Extracting parameter values from aged solution...")
-for label in filename_extension.keys():
+for label in filename_extension:
     values = []
     for i in cycles:
         values.append(
