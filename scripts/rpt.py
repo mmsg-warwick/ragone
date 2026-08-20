@@ -1,15 +1,17 @@
-import pybamm
+import argparse
+
 import matplotlib.pyplot as plt
-from matplotlib import colormaps
 import numpy as np
+import pybamm
+from matplotlib import colormaps
+
 from ragone import (
-    RagoneSimulation,
     ROOT,
+    RagoneSimulation,
     get_options,
     get_parameter_values,
     get_var_pts,
 )
-import argparse
 
 plt.rcParams.update({"font.size": 14})
 

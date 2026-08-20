@@ -5,9 +5,8 @@ import matplotlib.figure
 import numpy as np
 import pytest
 
-from ragone.solution import RagoneSolution
 from ragone.plotting import RagonePlot
-
+from ragone.solution import RagoneSolution
 
 # ---------------------------------------------------------------------------
 # Fixtures

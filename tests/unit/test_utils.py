@@ -6,11 +6,11 @@ All three public helpers are covered:
   - get_var_pts()          — pure Python, no pybamm dependency
 """
 
-import pytest
 from unittest.mock import MagicMock, patch
 
-from ragone.utils import get_options, get_parameter_values, get_var_pts
+import pytest
 
+from ragone.utils import get_options, get_parameter_values, get_var_pts
 
 # ---------------------------------------------------------------------------
 # get_options

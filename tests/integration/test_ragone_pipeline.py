@@ -13,16 +13,15 @@ modules run for real so that cross-module contracts are verified.
 import matplotlib
 
 matplotlib.use("Agg")
-import matplotlib.pyplot as plt
-
-import numpy as np
-import pytest
 from unittest.mock import MagicMock, patch
 
+import matplotlib.pyplot as plt
+import numpy as np
+import pytest
+
+from ragone.plotting import RagonePlot
 from ragone.simulation import RagoneSimulation
 from ragone.solution import RagoneSolution
-from ragone.plotting import RagonePlot
-
 
 # ---------------------------------------------------------------------------
 # Helpers

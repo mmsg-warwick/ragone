@@ -1,7 +1,8 @@
-import pybamm
 import numpy as np
-from ragone import RagoneSimulation, RagonePlot, get_parameter_values, get_var_pts, ROOT
+import pybamm
 from matplotlib import colormaps
+
+from ragone import ROOT, RagonePlot, RagoneSimulation, get_parameter_values, get_var_pts
 
 model = pybamm.lithium_ion.DFN(options={"calculate discharge energy": "true"})
 

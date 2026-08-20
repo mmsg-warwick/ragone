@@ -1,8 +1,10 @@
-import pandas as pd
-import matplotlib.pyplot as plt
-from matplotlib import colormaps
 import argparse
-from ragone import get_options, ROOT
+
+import matplotlib.pyplot as plt
+import pandas as pd
+from matplotlib import colormaps
+
+from ragone import ROOT, get_options
 
 plt.rcParams.update({"font.size": 14})
 
