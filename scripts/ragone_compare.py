@@ -19,7 +19,7 @@ solver = pybamm.IDAKLUSolver(rtol=1e-6, atol=1e-8)
 experiment_dch = pybamm.Experiment(
     [
         "Discharge at C/10 until 2.5V",
-        "Hold at 2.5V until C/50",
+        "Hold at 2.5V until 50 mA",
     ]
 )
 sim_dch = pybamm.Simulation(

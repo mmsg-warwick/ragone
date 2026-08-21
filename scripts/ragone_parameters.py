@@ -64,7 +64,7 @@ for label, values, color in zip(
     ax.plot(cycles, values, label=label, color=color)
 
 ax.set_xlabel("Cycle number")
-ax.set_ylabel("Porosity/AMVF [-]")
+ax.set_ylabel("Porosity/AMVF")
 ax.set_ylim(0, 1)
 ax.legend(
     ["Negative porosity", "Negative AMVF", "Positive porosity", "Positive AMVF"],
