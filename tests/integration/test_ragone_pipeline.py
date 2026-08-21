@@ -98,13 +98,13 @@ class TestSolutionToPlot:
         assert isinstance(ax, plt.Axes)
 
     def test_plot_x_limits_contain_data_range(self, power_solution):
-        fig, ax = power_solution.plot()
+        _, ax = power_solution.plot()
         xlim = ax.get_xlim()
         assert xlim[0] <= power_solution.data["Power [W]"].min()
         assert xlim[1] >= power_solution.data["Power [W]"].max()
 
     def test_plot_y_limits_contain_max_output(self, power_solution):
-        fig, ax = power_solution.plot()
+        _, ax = power_solution.plot()
         ylim = ax.get_ylim()
         assert ylim[1] >= power_solution.data["Energy [W.h]"].max()
 
@@ -122,19 +122,19 @@ class TestSolutionToPlot:
     def test_multiple_solutions_with_labels_creates_legend(self, aged_solutions):
         labels = ["Cycle 0", "Cycle 100", "Cycle 200"]
         plot = RagonePlot(aged_solutions, labels=labels)
-        fig, ax = plot.plot()
+        _, ax = plot.plot()
         legend = ax.get_legend()
         assert legend is not None
         legend_texts = [t.get_text() for t in legend.get_texts()]
         assert legend_texts == labels
 
     def test_secondary_axes_created_with_volume(self, power_solution):
-        fig, ax = power_solution.plot(volume=0.01)
+        _, ax = power_solution.plot(volume=0.01)
         # In matplotlib 3.11+ secondary axes are child_axes, not fig.axes entries
         assert len(ax.child_axes) >= 2
 
     def test_secondary_axes_created_with_mass(self, power_solution):
-        fig, ax = power_solution.plot(mass=0.05)
+        _, ax = power_solution.plot(mass=0.05)
         assert len(ax.child_axes) >= 2
 
     def test_data_limits_span_all_solutions(self, aged_solutions):
@@ -156,7 +156,7 @@ class TestSolutionToPlot:
         self, power_solution, current_watts_solution
     ):
         plot = RagonePlot([power_solution, current_watts_solution])
-        fig, ax = plot.plot()
+        fig, _ = plot.plot()
         assert isinstance(fig, plt.Figure)
 
 
@@ -171,7 +171,7 @@ class TestFitAndPlot:
 
     def test_fit_log_then_plot_succeeds(self, power_solution):
         power_solution.fit_log()
-        fig, ax = power_solution.plot()
+        fig, _ = power_solution.plot()
         assert isinstance(fig, plt.Figure)
 
     def test_metrics_survive_plotting(self, power_solution):
@@ -216,7 +216,7 @@ class TestFitAndPlot:
         }
         solution = RagoneSolution(data, "power")
         solution.fit_log()
-        fig, ax = solution.plot()
+        fig, _ = solution.plot()
         assert isinstance(fig, plt.Figure)
 
     def test_fit_metrics_have_required_keys(self, power_solution):
@@ -345,14 +345,14 @@ class TestSimulationPipeline:
 
     def test_solution_can_be_plotted(self, patched_sim_power):
         _, solution = patched_sim_power
-        fig, ax = solution.plot()
+        fig, _ = solution.plot()
         assert isinstance(fig, plt.Figure)
 
     def test_full_pipeline_solve_fit_plot(self, patched_sim_power):
         _, solution = patched_sim_power
         solution.fit_log()
         assert solution.metrics is not None
-        fig, ax = solution.plot()
+        fig, _ = solution.plot()
         assert isinstance(fig, plt.Figure)
 
     def test_current_watts_solution_has_watt_keys(self, patched_sim_current_watts):
@@ -363,7 +363,7 @@ class TestSimulationPipeline:
     def test_current_watts_solution_can_be_plotted(self, patched_sim_current_watts):
         _, solution = patched_sim_current_watts
         # current solution with watt keys can be plotted alongside a power solution
-        fig, ax = solution.plot()
+        fig, _ = solution.plot()
         assert isinstance(fig, plt.Figure)
 
     def test_solver_failure_produces_nan_that_survives_to_plot(self, mock_model):
@@ -402,7 +402,7 @@ class TestSimulationPipeline:
 
         assert np.any(np.isnan(solution.data["Power [W]"]))
         # Plot must not raise even with NaN entries
-        fig, ax = solution.plot()
+        fig, _ = solution.plot()
         assert isinstance(fig, plt.Figure)
 
 

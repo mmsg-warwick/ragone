@@ -157,12 +157,12 @@ class TestRagonePlotPlot:
 
     @pytest.mark.unit
     def test_linear_scale_returns_figure(self, power_solution):
-        fig, ax = RagonePlot(power_solution, scale="linear").plot(show_plot=False)
+        fig, _ = RagonePlot(power_solution, scale="linear").plot(show_plot=False)
         assert isinstance(fig, matplotlib.figure.Figure)
 
     @pytest.mark.unit
     def test_labels_produce_a_legend(self, power_solution):
-        fig, ax = RagonePlot(power_solution, labels=["Series A"]).plot(show_plot=False)
+        _, ax = RagonePlot(power_solution, labels=["Series A"]).plot(show_plot=False)
         assert ax.get_legend() is not None
 
     @pytest.mark.unit
@@ -174,7 +174,7 @@ class TestRagonePlotPlot:
     @pytest.mark.unit
     def test_linear_scale_with_labels_creates_legend(self, power_solution):
         # Covers the `elif self.scale == "linear"` legend branch (line 315-316)
-        fig, ax = RagonePlot(power_solution, scale="linear", labels=["Series A"]).plot(
+        _, ax = RagonePlot(power_solution, scale="linear", labels=["Series A"]).plot(
             show_plot=False
         )
         assert ax.get_legend() is not None
