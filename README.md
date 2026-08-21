@@ -33,7 +33,7 @@ In order to reproduce the results of the article, you need to run the scripts in
     - `ragone_ageing.py` to produce the Ragone plots for a specific simulation at different cycle numbers (i.e. different states of health). This wil also compute the metrics that will be saved as .csv files in the `data/` folder, which are needed to run `plot_power_energy_fade.py`.
     - `ragone_compare.py` to produce the Ragone plots for all the combinations of cycling mode (power or current) and direction (charge or discharge).
     - `ragone_parameters.py` to produce the Ragone plots showing the effect of a single parameter.
-    - `rpt.py` to produce the reference performance test plots.
+    - `rpt.py` to produce the reference performance test plots (for the article the SEI plot uses a broader range of powers, this can be adjusted by uncommenting the appropriate line in `rpt.py`).
 3. Run `plot_power_energy_fade.py` to produce the plots showing the normalised energy and power fade vs cycle number, comparing slow and fast charging.
 
 ## Repository structure

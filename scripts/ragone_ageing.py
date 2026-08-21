@@ -97,6 +97,19 @@ elif scale == "linear":
 for mode, value_range in value_ranges.items():
     print(f"Running Ragone plots for {mode}...")
     solutions = []
+
+    if mode == "power":
+        metrics_map = [
+            ("$E_0$", "Reference energy [W.h]", ".2f"),
+            ("$P_0$", "Reference power [W]", ".2f"),
+        ]
+    elif mode == "current":
+        metrics_map = [
+            ("$Q_0$", "Reference capacity [A.h]", ".2f"),
+            ("$I_0$", "Reference current [A]", ".2f"),
+        ]
+    metrics_map += [("$n$", "n", ".2f"), ("$R^2$", "R^2", ".4f")]
+
     for i, first_state in enumerate(ageing_solutions):
         print(f"Running Ragone plot for solution {i + 1} of {len(ageing_solutions)}")
         new_model = model.set_initial_conditions_from(first_state, inplace=False)
@@ -114,8 +127,11 @@ for mode, value_range in value_ranges.items():
         my_plt = RagonePlot(sol, labels=None, scale=scale, fit=True)
         fig, ax = my_plt.plot(show_plot=False)
 
+        annotation = ",\n ".join(
+            f"{sym} = {sol.metrics[key]:{fmt}}" for sym, key, fmt in metrics_map
+        )
         ax.annotate(
-            f"$E_0$ = {np.exp(sol._raw_metrics[0]):.2f},\n $P_0$ = {sol._raw_metrics[1]:.2f},\n n = {sol._raw_metrics[2]:.2f}",
+            annotation,
             xy=(0.05, 0.05),
             xycoords="axes fraction",
         )
@@ -147,7 +163,7 @@ for mode, value_range in value_ranges.items():
             sol.fit_log()
             metrics["Cycle number"].append(cycle + 1)
 
-            for key in sol.metrics.keys():
+            for key in sol.metrics:
                 if key not in metrics:
                     metrics[key] = []
                 metrics[key].append(sol.metrics[key])
