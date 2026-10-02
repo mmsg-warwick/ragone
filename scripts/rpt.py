@@ -60,7 +60,7 @@ cycles = [1] + list(range(step - 1, len(aged_sol.all_first_states), step))
 ageing_solutions = [aged_sol.all_first_states[i] for i in cycles]
 
 value_ranges = {
-    # "power": [2, 10, 18, 26, 34, 42, 50],
+    # "power": [2, 10, 18, 26, 34, 42, 50], # range used for SEI plot in paper
     "power": [2, 6, 10, 14, 18],
     # "current": [0.5, 1.25, 2.5, 3.75, 5],
 }
@@ -97,7 +97,7 @@ for mode, value_range in value_ranges.items():
         ax.plot(cycles, solutions, label=f"{value} {units}", color=color)
 
     ax.set_xlabel("Cycle number")
-    ax.set_ylabel(sol.output)
+    ax.set_ylabel(sol.output.replace(".", " "))
     ymax = 20 if mode == "power" else 5
     ax.set_ylim(0, ymax * 1.1)
     ax.legend(fontsize=10)

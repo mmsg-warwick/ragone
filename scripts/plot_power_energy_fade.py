@@ -71,7 +71,7 @@ ax.plot(
 )
 
 ax.set_xlabel("Cycle number")
-ax.set_ylabel("Normalised energy/power [%]")
+ax.set_ylabel("Normalised energy/power / %")
 ax.set_xlim([0, 1000])
 ax.set_ylim([0, 100])
 ax.legend(fontsize=10)

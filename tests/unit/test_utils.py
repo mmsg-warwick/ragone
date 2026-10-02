@@ -26,7 +26,7 @@ class TestGetOptions:
 
     @pytest.mark.unit
     def test_sei_only_sets_sei_keys(self):
-        options, tag = get_options(SEI=True)
+        options, _ = get_options(SEI=True)
         assert "SEI" in options
         assert options["SEI"] == "reaction limited"
         assert "SEI porosity change" in options
@@ -39,7 +39,7 @@ class TestGetOptions:
 
     @pytest.mark.unit
     def test_plating_only_sets_plating_keys(self):
-        options, tag = get_options(plating=True)
+        options, _ = get_options(plating=True)
         assert "lithium plating" in options
         assert options["lithium plating"] == "irreversible"
         assert "lithium plating porosity change" in options
@@ -52,7 +52,7 @@ class TestGetOptions:
 
     @pytest.mark.unit
     def test_lam_only_sets_lam_keys(self):
-        options, tag = get_options(lam=True)
+        options, _ = get_options(lam=True)
         assert "particle mechanics" in options
         assert options["particle mechanics"] == "swelling only"
         assert "loss of active material" in options
@@ -147,7 +147,7 @@ class TestGetParameterValues:
 
     @pytest.mark.unit
     def test_returns_okane_instance(self, mock_pv_instances):
-        _, mock_okane, mock_chen, mock_oregan = mock_pv_instances
+        _, mock_okane, _, _ = mock_pv_instances
         result = get_parameter_values()
         assert result is mock_okane
 
@@ -162,7 +162,7 @@ class TestGetParameterValues:
 
     @pytest.mark.unit
     def test_copies_all_four_transport_params_from_oregan2022(self, mock_pv_instances):
-        _, mock_okane, _, mock_oregan = mock_pv_instances
+        _, mock_okane, _, _ = mock_pv_instances
         get_parameter_values()
 
         transport_params = [

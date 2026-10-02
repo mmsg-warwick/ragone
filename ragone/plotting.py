@@ -29,8 +29,7 @@ class RagonePlot:
             self.output = "Energy [W.h]"
             for sol in self.solutions:
                 if sol.mode == "current" and (
-                    "Power [W]" not in sol.data.keys()
-                    or "Energy [W.h]" not in sol.data.keys()
+                    "Power [W]" not in sol.data or "Energy [W.h]" not in sol.data
                 ):
                     raise ValueError(
                         "All solutions must either have the same mode or have the"
@@ -214,10 +213,10 @@ class RagonePlot:
         def convert_labels(label, scaling):
             if "Energy" in label:
                 quantity = "Energy"
-                unit = "W.h"
+                unit = "W h"
             elif "Capacity" in label:
                 quantity = "Capacity"
-                unit = "A.h"
+                unit = "A h"
             elif "Power" in label:
                 quantity = "Power"
                 unit = "W"
@@ -226,9 +225,9 @@ class RagonePlot:
                 unit = "A"
 
             if scaling == "volume":
-                return f"{quantity} density [{unit}.l$^{{-1}}$]"
+                return f"{quantity} density / {unit} l$^{{-1}}$"
             elif scaling == "mass":
-                return f"Specific {quantity.lower()} [{unit}.kg$^{{-1}}$]"
+                return f"Specific {quantity.lower()} / {unit} kg$^{{-1}}$"
 
         secx.tick_params(axis="x", labelsize=fontsize)
         secy.tick_params(axis="y", labelsize=fontsize)
@@ -288,9 +287,12 @@ class RagonePlot:
                 linestyle=linestyle,
             )
 
+        def format_label(label):
+            return label.replace(" [", " / ").rstrip("]").replace(".", " ")
+
         # Set labels
-        self.ax.set_xlabel(self.input)
-        self.ax.set_ylabel(self.output)
+        self.ax.set_xlabel(format_label(self.input))
+        self.ax.set_ylabel(format_label(self.output))
         self._set_axes_ticks()
 
         # Produce secondary axes

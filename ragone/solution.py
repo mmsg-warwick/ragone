@@ -48,11 +48,20 @@ class RagoneSolution:
         )
 
         self._raw_metrics = popt
+
+        # Compute residuals
+        residuals = log_output - self._gaussian_log(log_input, *popt)
+        ss_res = np.sum(residuals**2)
+        ss_tot = np.sum((log_output - np.mean(log_output)) ** 2)
+        r_squared = 1 - ss_res / ss_tot
+
         self.metrics = {
             f"Reference {self.output[0].lower() + self.output[1:]}": np.exp(popt[0]),
             f"Reference {self.input[0].lower() + self.input[1:]}": popt[1],
             "n": popt[2],
+            "R^2": r_squared,
         }
+
         return popt
 
     def fit(self):
