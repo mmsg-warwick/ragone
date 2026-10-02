@@ -6,7 +6,7 @@
 
 This repository contains the code to generate Ragone plots and reproduce the results of the article:
 
-> F. Brosa Planella, S.J. Cooper There is no knee in Ragone: Clarifying battery energy and power fade using Ragone plots, _Under review_.
+> F. Brosa Planella, S.J. Cooper, [There is no knee in Ragone: Clarifying battery energy and power fade using Ragone plots](https://doi.org/10.1039/d6eb00182c), EES Batteries (2026).
 
 ## Installation
 
@@ -35,6 +35,7 @@ In order to reproduce the results of the article, you need to run the scripts in
     - `ragone_parameters.py` to produce the Ragone plots showing the effect of a single parameter.
     - `rpt.py` to produce the reference performance test plots (for the article the SEI plot uses a broader range of powers, this can be adjusted by uncommenting the appropriate line in `rpt.py`).
 3. Run `plot_power_energy_fade.py` to produce the plots showing the normalised energy and power fade vs cycle number, comparing slow and fast charging.
+4. Run `graphical_abstract_generate_data.py` to produce the data needed for the graphical abstract. The output files will be stored in `data/`. Then run `graphical_abstract_make_plot.py` to produce the graphical abstract figure, which will be saved in `figures/`.
 
 ## Repository structure
 
